@@ -4,19 +4,24 @@ function extracted_data = loadExperiment(targetNotebook, targetPage, range)
 % Set filenumbers 
 metadataMaster
 directory = pathfinder(targetNotebook, targetPage);
-if isequal(range, "roi")
-    
-    files = metadata(targetNotebook, targetPage).files;
-elseif isequal(range, "crash")
-    [~, idxMax] = max(metadata(targetNotebook, targetPage).tempValues);
-    fileCrash = metadata(targetNotebook, targetPage).files(idxMax);
-    fileBefore = fileCrash - 2;
-    files = fileBefore:fileCrash;
-elseif isequal(range, "all")
+
+if nargin == 2 || isequal(range, "all")
     
     file_search = strcat(directory, '/', '*.abf'); % Find ABF files
     files = dir(file_search); % List ABF files
     files = 0:length(files) - 1;
+
+elseif isequal(range, "roi")
+    
+    files = metadata(targetNotebook, targetPage).files;
+
+elseif isequal(range, "crash")
+
+    [~, idxMax] = max(metadata(targetNotebook, targetPage).tempValues);
+    fileCrash = metadata(targetNotebook, targetPage).files(idxMax);
+    fileBefore = fileCrash - 2;
+    files = fileBefore:fileCrash;
+    
 else 
     files = range;
 end

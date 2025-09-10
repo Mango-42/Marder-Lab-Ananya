@@ -10,7 +10,7 @@ function path = pathfinder(targetNotebook, targetPage)
 
     notebooks = struct;
     notebooks.sonal = [927 945 970];
-    notebooks.kathleen = [984 988 992 980];
+    notebooks.kathleen = [984 988 992 980 998];
     notebooks.ananya = [993];
     notebooks.yolanda = [995];
     notebooks.ani = [943];
