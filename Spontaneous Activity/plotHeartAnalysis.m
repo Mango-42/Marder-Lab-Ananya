@@ -1,24 +1,24 @@
 %
-nbs = [986 986 986 986 986 986 993 993 993 993 993];
-pages = [92 110 112 116 120 124 8 9 10 11 12];
+nbs = [998 998 998];
+pages = [24 28 46];
 
 close all
 metadataMaster
 
 figure(101)
 hold on
-p = fill([21 35 35 21],[0 0 1.4 1.4], [.9 .9 .9]);
-xlim([10 35])
-ylim([0 1.4])
-p.EdgeColor = 'none';
+% p = fill([21 35 35 21],[0 0 1.4 1.4], [.9 .9 .9]);
+% xlim([10 35])
+% ylim([0 1.4])
+% p.EdgeColor = 'none';
 
 
 figure(102)
 hold on
-p = fill([21 35 35 21],[0 0 .02 .02], [.9 .9 .9]);
-xlim([10 35])
-ylim([0 0.02])
-p.EdgeColor = 'none';
+% p = fill([21 35 35 21],[0 0 .02 .02], [.9 .9 .9]);
+% xlim([10 35])
+% ylim([0 0.02])
+% p.EdgeColor = 'none';
 
 
 
@@ -43,7 +43,7 @@ for i = 1:length(nbs)
     
     for t = temps
         % find peaks at that temperature
-        idxTemp = find(dataPeaks.temp > t - .3 & dataPeaks.temp < t + .3);
+        idxTemp = find(dataPeaks.temp > t - 1 & dataPeaks.temp < t + 1);
     
         if ~isempty(idxTemp)
     
@@ -81,7 +81,7 @@ for i = 1:length(nbs)
 end
 
 figure(101)
-    title("Heartbeat frequency")
+    title("FT Frequency")
     ylabel("Frequency (Hz)")
     xlabel("Temperature (°C)")
     l = legend;
@@ -91,7 +91,7 @@ figure(101)
     set(findall(gcf,'-property','fontsize'),'fontsize',20)
 
 figure(102)
-    title("Heartbeat force")
+    title("FT force")
     ylabel("Force (N)")
     xlabel("Temperature (°C)")
     l = legend;

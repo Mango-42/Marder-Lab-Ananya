@@ -44,7 +44,7 @@ else
 end
 rows = [];
 for i = accRows
-    if sum(strcmp(datasheet.electrodes{i}, muscle)) == 1
+    if sum(strcmp(datasheet.electrodes{i}, muscle)) >= 1
         rows = [rows, i];
     end
 end
@@ -125,6 +125,8 @@ for i = rows
 
     notebook = str2double(datasheet.notebook{i});
     page = str2double(datasheet.page{i});
+
+    
     expName = "NB: " + notebook + " page " + page;
     
     % single burst plotting at 11 and 21
@@ -245,7 +247,7 @@ if analysis == "peaksBin"
 
     
     % Plot
-    shapes = {'o', '*', 'square', 'diamond', '^'};
+    shapes = {'o', '*', 'square', 'diamond', '^', 'x', '.', 'pentagram'};
     if datasheet.acclimation{i} == "11"
         idx11 = idx11 + 1;
         shape = shapes{idx11};

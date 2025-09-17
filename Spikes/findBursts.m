@@ -33,32 +33,30 @@ inputIsi = [];
 inputIsi(:, 1) = isiBefore;
 inputIsi(:, 2) = isiAfter;
 inputIsi(:, 3) = isiBefore - isiAfter;
-inputIsi(:, 4) = (isiBefore ./ isiAfter) > 5;
+%inputIsi(:, 4) = (isiBefore ./ isiAfter) > 5;
 
 inputIsi = normalize(inputIsi, 1);
 
-% Shifted data
-% inputIsi(2:end, 4:6) = inputIsi(1:end - 1, 1:3);
-% inputIsi(1, 4:6) = inputIsi(1, 1:3);
-% If intracellular data, also add ratio of isi before to after
 
-%eva = evalclusters(inputIsi,'kmeans','DaviesBouldin','KList',1:6);
-%k = eva.OptimalK;
+rng(1)
+eva = evalclusters(inputIsi,'kmeans','DaviesBouldin','KList',1:6);
+k = eva.OptimalK;
+[labels, centroids] = kmeans(inputIsi, k);
 
-    labels = dbscan(inputIsi, .5, 5);
+%     labels = dbscan(inputIsi, .5, 5);
 
 %     inputIsi = inputIsi(labels ~= -1, :);
 %     locs = locs(labels ~= -1);
 %     peaks = peaks(labels ~= -1);
 %     labels = labels(labels ~= -1);
 
-    labels(labels == -1) = max(labels) + 1;
-    centroids = splitapply(@mean,inputIsi,labels);
+%     labels(labels == -1) = max(labels) + 1;
+% 
+%     disp(size(labels))
+%     disp(size(inputIsi))
+%     centroids = splitapply(@mean,inputIsi,labels);
 
 
-
-
-%[labels, centroids] = kmeans(inputIsi, k);
 
 types = {};
 k = length(centroids(:, 1));
@@ -80,7 +78,8 @@ for i = 1:k
     
 end
 
-% Look for other possible suspicious spikes 
+% Look for other possible suspicious spikes -- this whole thing is not
+% working LMAO
 % (multiple starts, multiple ends next to each other)
 
 types{k+1} = "Suspicious";
@@ -98,7 +97,7 @@ for i = 1:length(labels)
         foundStart = 1;
     
     % ends without a start 
-    elseif types{labels(i)} == "End" & foundStart == 0
+    elseif types{labels(i)} == "End" && foundStart == 0
         foundStart = 0;
         labels(i) = k+1;
     elseif types{labels(i)} == "End" 

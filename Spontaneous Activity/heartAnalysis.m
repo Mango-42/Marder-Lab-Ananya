@@ -21,7 +21,7 @@ else
     allData.file = [];
     allData.time = [];
 
-    files = metadata(targetNotebook, targetPage).tempFiles;
+    files = metadata(targetNotebook, targetPage).files;
     temps = metadata(targetNotebook, targetPage).tempValues;
     cal = metadata(targetNotebook, targetPage).calibration;
 
@@ -63,10 +63,15 @@ else
         force = ((v - min(vClean)) / cal) * (.001 * 9.8);
         figure
         minHeight = mean(force) + std(force);
-        findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 / fs, 'MinPeakHeight', minHeight);
-        % Peaks
-        
-        [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 / fs, 'MinPeakHeight', minHeight);
+
+        % THIS SETTING FOR HEART
+        %findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 / fs, 'MinPeakHeight', minHeight);
+        %THIS SETTING FOR MUSCLE FT
+        findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 / fs);
+        % THIS SETTING FOR HEART
+        %[peaks, loc] = findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 / fs, 'MinPeakHeight', minHeight);
+        %THIS SETTING FOR MUSCLE FT
+        [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 / fs);
         timeLoc = loc * fs;
 
         % Get rid of noise outlier peaks
