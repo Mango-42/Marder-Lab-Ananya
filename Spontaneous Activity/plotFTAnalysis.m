@@ -1,9 +1,14 @@
-%
+
+% Use this to plot force transducer analysis. You don't need to already
+% have done the analysis; it'll call forceTransAnalysis.m on your experiment
+% if there isn't stored peak data
+
+% Set these with your nbs and pages
 nbs = [998 998 998];
 pages = [24 28 46];
 
 close all
-metadataMaster
+metadataMaster % Make sure your experiment is in this file (within Routing and Metadata folder)
 
 figure(101)
 hold on
@@ -21,14 +26,12 @@ hold on
 % p.EdgeColor = 'none';
 
 
-
-
 for i = 1:length(nbs)
     
     targetNotebook = nbs(i);
     targetPage = pages(i);
 
-    dataPeaks = heartAnalysis(targetNotebook, targetPage);
+    dataPeaks = forceTransAnalysis(targetNotebook, targetPage);
     
     expName = "NB: " + targetNotebook + " page " + targetPage;
     temps = metadata(targetNotebook, targetPage).tempValues;
@@ -43,7 +46,7 @@ for i = 1:length(nbs)
     
     for t = temps
         % find peaks at that temperature
-        idxTemp = find(dataPeaks.temp > t - 1 & dataPeaks.temp < t + 1);
+        idxTemp = find(dataPeaks.temp > t - .3 & dataPeaks.temp < t + .3);
     
         if ~isempty(idxTemp)
     

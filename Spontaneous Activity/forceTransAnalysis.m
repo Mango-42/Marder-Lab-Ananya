@@ -1,7 +1,22 @@
-function [dataPeaks] = heartAnalysis(targetNotebook, targetPage)
-    %% Get vrest, peaks, and frequency
-    
-    metadataMaster
+function [dataPeaks] = forceTransAnalysis(targetNotebook, targetPage)
+    %% Description: Get force and frequency data on a ft experiment. Pair with plotHeartAnalysis.m
+    % to plot out figures from output (dataPeaks)
+
+    % Inputs:
+        % targetNotebook (int)
+        % targetPage (int)
+    % Output:
+        % dataPeaks (struct) - struct with the following fields
+            % amp - amplitude of every peak detected on files listed in metadata
+            % freq - instantaneous frequency of every peaks
+            % file - associated file number in the sequence --> fix
+            % temp - avg temp between a peak and the next one (in Celcius)
+            % time - time of each peak
+
+    % Last updated: Sept 18 2025 by Ananya Dalal
+
+
+metadataMaster
 filename = "/Volumes/marder-lab/adalal/MatFiles/" + targetNotebook + "_" + targetPage + "_heart.mat";
 
 % Try to load experiment data if it's already there in ananya's folder
