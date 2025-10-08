@@ -16,19 +16,21 @@ function [spikes] = getExtraSpikes(v, varargin)
     
     time = 1/Fs * (0:length(v) - 1);
 
-    title("All peaks detected")
     [pks,locs,~,p] = findpeaks(v, time, "MinPeakDistance", .01, "MinPeakProminence",0.01);
     
-    % If nothing detected, return early
-    if isempty(pks)
+
+    % If nothing detected or not bimodal bursting , return early
+    if isempty(pks) 
         spikes = [];
         return
     end
 
     % Remove high spikes from rig noise
-    pks = pks(pks < 5);
-    locs = locs(pks < 5);
-    p = p(pks < 5);
+
+    idx = pks < 2;
+    pks = pks(idx);
+    locs = locs(idx);
+
 
     % Remove spikes overlapping from another neuron
     if nargin == 2
@@ -41,58 +43,38 @@ function [spikes] = getExtraSpikes(v, varargin)
         idx = find(locs);
         locs= locs(idx);
         pks = pks(idx);
-        p = p(idx);
 
     end 
 
     % Cluster the data using peak height and prominence
     inputClustering = [];
     inputClustering(:, 1) = pks;
-    %inputClustering(:, 2) = p;
-
-    % Make outliers another category (probably legit peaks, just few of them)
-    %e = clusterDBSCAN.estimateEpsilon(inputClustering, 5,length(inputClustering))
-
-%     labels = dbscan(inputClustering, .0025, 5);
-%     numCats = max(labels);
-%     labels(labels == -1) = numCats + 1;
 
     rng(1);
-    eva = evalclusters(inputClustering,'kmeans','silhouette','KList',1:6);
+    eva = evalclusters(inputClustering,'kmeans','silhouette','KList',1:4);
     k = eva.OptimalK;
     [labels, C] = kmeans(inputClustering, k);
-    %numCats = max(labels);
-    %labels(labels == -1) = numCats + 1;
-
-    % Find the cluster with the least peak height and treat this as your
-    % baseline. Start with the set of all peaks, and remove cluster with 
-    % least peak height and any points that are not significantly higher
-    % than your baseline
-     %C = splitapply(@mean,inputClustering,labels)
-    
     
      [~, noiseCluster] = min(C);
 
      pks = pks(labels ~= noiseCluster);
      locs = locs(labels ~= noiseCluster);
-     labels = labels(labels ~= noiseCluster);
-     peak = pks;
-     spikes = locs;
+
 
     % Finally, make sure to just remove any low peaks below std
-% 
-    stdev = std(peak);
-    avg = mean(peak);
 
-    idx = peak > avg - 3 * stdev;
-    peak = peak(idx);
-    spikes = spikes(idx);
+    stdev = std(pks);
+    avg = mean(pks);
+
+    idx = pks > avg - 3 * stdev;
+    pks = pks(idx);
+    locs = locs(idx);
 
     figure
     hold on
     plot(time, v);
-    scatter(spikes, peak);
-    title(length(peak) + " peaks detected")
+    scatter(locs, pks);
+    title(length(pks) + " peaks detected")
     
 
 
