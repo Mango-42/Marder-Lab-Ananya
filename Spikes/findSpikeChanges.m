@@ -1,50 +1,61 @@
-function [group] = findSpikeChanges(v)
+function [spikeInfo] = findSpikeChanges(v, varargin)
 %% Look for changes in spike patterns
 % Nonspecific detection of burst starts, ends, and changes in amplitude and
 % spike density -- functions as a vague burst detector bc it is hard to be
 % specific sometimes
 
-% Does not account for concurrent bursts (i.e. LG at the same time as
+% Does not account for concurrent bursts (i.e. LG, gastric mill at the same time as
 % triphasic), so you'll have to rely on other factors in sortSpikes for
 % that
-%%
+%% Get spike times and set params
 Fs = 10^4;
+rng(1)
+neighbors = 3;
 
-spikeTimes = getExtraSpikes(v);
+% If you pass in spikes as a secondary argument, assume this IS the set of
+% spikes to use (prefiltered)
+if nargin == 2
+    [spikeTimes] = varargin{1};
+else
+    [spikeTimes] = getExtraSpikes(v);
+end
+
+if isempty(spikeTimes) %|| bimodalitycoeff(diff(spikeTimes)) == 0
+    spikeInfo = struct();
+    spikeInfo.spikeTimes = [];
+    spikeInfo.burstNum = [];
+    return
+end
+
 
 changes = zeros([1 length(spikeTimes)]);
 
-% First look for potential burst starts and ends by long ISIs
+%% First look for potential burst starts and ends by long ISIs
 isi = diff(spikeTimes);
 
 if ~isempty(spikeTimes)
-isi = [spikeTimes(1) isi length(v)/ Fs - spikeTimes(end)];
+isi = [spikeTimes(1) isi ];
 end
 
 % Look for a cluster with the biggest isi-- likely starts and ends
-eva = evalclusters(isi','kmeans','DaviesBouldin','KList',2:3);
-k = eva.OptimalK;
+eva = evalclusters(isi','kmeans','DaviesBouldin','KList',1:4);
+k = eva.OptimalK
 
 [labels, C] = kmeans(isi', k);
+
+% labels = clusterdata(isi', MaxClust = 3);
+% disp(max(labels))
+% C = splitapply(@mean,isi',labels);
+
 [~, idxMax] = max(C);
 [~, idxMin] = min(C);
 
 % Changes in isi (label as 1)
-changes(labels == idxMax) = 1;
+changes(labels ~= idxMin) = 1;
 isChangeInISI = changes;
 
-% % Look for lasting changes in spike density
-% [~, idxMin] = min(C);
-% 
-% range = 3 * isi(labels == idxMin);
-% 
-% 
-% for i = 1:length(spikeTimes)
-%     
-% end
 
-
-% Look for changes in amplitude (helpful for back-to-back transitions)
+%% Look for changes in POS amplitude (helpful for back-to-back transitions)
 idxSpikes = int64(spikeTimes * Fs) + 1;
 amp = v(idxSpikes);
 
@@ -53,11 +64,15 @@ amp = v(idxSpikes);
 % to its right or left AND the l - r is a large difference on its own then
 % probsa transition
 
-thresh = mean(abs(diff(amp))) + 1 * (std(abs(diff(amp))));
-neighbors = 2;
-
+thresh = mean(abs(diff(amp)))  + 1 * (std(abs(diff(amp))));
 
 for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
+    
+    % if there's a big timeskip in your neighbors, you're not a transition
+    % sorry to disappoint :(
+    if sum(isChangeInISI(i - neighbors:i+neighbors)) > 0
+        continue
+    end
     l = mean(amp(i - neighbors: i - 1));
     r = mean(amp(i + 1: i + neighbors));
     % abs(l - r) > max([abs(amp(i) - l) abs(amp(i) - r)])
@@ -68,31 +83,37 @@ for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
 end
 
 
-% do the same on spike density
+%% Look for changes in NEG amplitude
 
-% thresh = mean(isi(labels == idxMin)) + 1 * std(isi(labels == idxMin));
-% 
-% for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
-%     l = mean(isi(i - neighbors: i - 1));
-%     r = mean(isi(i + 1: i + neighbors));
-%     % abs(l - r) > max([abs(amp(i) - l) abs(amp(i) - r)])
-%     
-% % this makes no sense you need to think of a better measure
-%     if abs(l - r) > thresh        
-%         changes(i) = 3;
-%     end
-% end
+% Find the negative peak of each spike
+win = 3*10^-3; % Use a window size for shape of 3 ms;
+shapeSize = 2 * (win * Fs) + 1; % +1 for the spike itself 
+idxSpikes = int64(spikeTimes * Fs) + 1001;
+
+ tempV = [ zeros([1 1000]) v zeros([1 1000]) ];
+for i = 1:length(idxSpikes)
+    shape(i, :) = tempV( (idxSpikes(i) - win*Fs ):(idxSpikes(i) + win*Fs) );
+end
+
+negAmp = min(shape, [], 2);
 
 
-% movStd = movstd(amp, 3);
-% 
-% [~, idx] = findpeaks(movStd, "MinPeakHeight", mean(movStd));
-% 
-% 
-% 
-% 
-% % Changes in amplitude (label as 2)
-% changes(idx) = 2;
+
+% Same algorithm, but now on negative peaks
+for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
+    
+    % if there's a big timeskip in your neighbors, you're not a transition
+    % sorry to disappoint :(
+    if sum(isChangeInISI(i - neighbors:i + neighbors)) > 0
+        continue
+    end
+    l = mean(negAmp(i - neighbors: i - 1));
+    r = mean(negAmp(i + 1: i + neighbors));
+    if abs(l - r) > thresh        
+        changes(i) = 2;
+    end
+
+end
 
 
 changes(changes ~= 0) = 1;
@@ -108,7 +129,8 @@ for i = 1:length(changes) - 1
     end   
 
 end
-% Group spikes that are changes in a row and find a separating point
+
+%% Group spikes that are changes in a row and find a separating point
 % ie, spikes from this point on are more similar to the following ones 
 idxChanges = find(changeStarts);
 for i = 1:length(idxChanges)
@@ -118,8 +140,8 @@ for i = 1:length(idxChanges)
     endGroup = 0;
 
     currIdx = currIdx + 1;
-    while endGroup == 0
-        if changes(currIdx) == 1
+    while endGroup == 0 && currIdx <= length(spikeTimes)
+        if changes(currIdx) == 1 
             spikesToSplit = [spikesToSplit currIdx];
             currIdx = currIdx + 1;
         else
@@ -130,26 +152,38 @@ for i = 1:length(idxChanges)
     % Now that you have a group of spikes to split, look at their nearby
     % ones and find where is the strongest transition 
 
-    % If there is one time transition, then mark that as the only valid
+    % If there is one or more time transitions, then mark those as the only valid
     % transition
-    if sum(isChangeInISI(spikesToSplit)) == 1
+    if sum(isChangeInISI(spikesToSplit)) >= 1
 
         trueChanges(spikesToSplit(1):spikesToSplit(end)) = isChangeInISI(spikesToSplit);
     
     % Else find the biggest amplitude change from the left side
+    % Look at positive and negative amplitude!
     else
     
-        ampDiff = [];
-        % if length(spikeTimes) >=2 ...? 
+        ampDiffPos = [];
+        ampDiffNeg = [];
+
         for j = 1:length(spikesToSplit)
             try
-                l = abs(amp(spikesToSplit(j)) - amp(spikesToSplit(j) - 1));
+                lPos = abs(amp(spikesToSplit(j)) - amp(spikesToSplit(j) - 1));
+                lNeg = abs(negAmp(spikesToSplit(j)) - negAmp(spikesToSplit(j) - 1));
             catch
-                l = 0;
+                lPos = 0;
+                lNeg = 0;
             end
-            ampDiff = [ampDiff l];
+            ampDiffPos = [ampDiffPos lPos];
+            ampDiffNeg = [ampDiffNeg lNeg];
         end
-    
+
+        % Figure out if biggest amp diff is a positive or negative peak
+        if max(ampDiffPos) > max(ampDiffNeg)
+            ampDiff = ampDiffPos;
+        else
+            ampDiff = ampDiffNeg;
+        end
+        
         [~, idxMaxAmpChange] = max(ampDiff);
         ampDiff = 0 * ampDiff;
         ampDiff(idxMaxAmpChange) = 1;
@@ -159,14 +193,33 @@ for i = 1:length(idxChanges)
 
 end
 
-
+changes(trueChanges == 1) = 2;
 
 figure()
-gscatter(spikeTimes, amp, trueChanges, [], [], 10)
+gscatter(spikeTimes, amp, changes, [], [], 10)
 hold on
 t = (0:length(v) - 1) / Fs;
 plot(t, v, 'k-')
 
+%% Wrap output up so you have easy access to burst number
+spikeInfo = struct();
+
+spikeInfo.spikeTimes = spikeTimes;
+burstNum = [];
+currNum = 0;
+
+for i = 1:length(trueChanges)
+
+    if trueChanges(i)
+        currNum = currNum + 1;
+        burstNum = [burstNum currNum];
+    else
+        burstNum = [burstNum currNum];
+    end
+    
+end
+
+spikeInfo.burstNum = burstNum;
 
 
     

@@ -1,4 +1,4 @@
-function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
+function [spikeGroups, reduced] = sortSpikes(v, varargin)
 
     %% Description: Sorts spikes from two neurons given raw trace
 
@@ -30,9 +30,15 @@ function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
     % Waveform shape: v through 3 ms before/after the spike 
     % Waveform shape: Average shape of the spikes in the burst
 
+    % Length of burst and number of spikes in the burst TBA
+
     % Previously, sorting was done in crabsort just using spike waveform
     % shape. 
 
+   
+%% Get spike times and changes
+    close all
+ 
 
     Fs = 10^4;
     win = 3*10^-3; % Use a window size for shape of 3 ms;
@@ -42,13 +48,17 @@ function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
     if nargin == 2
         [spikeTimes] = getExtraSpikes(v, varargin{1});
     else
-        [spikeTimes] = getExtraSpikes(v);
+        [spikeTimes] = getExtraSpikes(v); 
     end
 
-    [~, ~, spikeInfo] = findBursts(spikeTimes, v);
-
-
-
+    [spikeInfo] = findSpikeChanges(v, spikeTimes);
+    if isempty(spikeTimes) || isempty(spikeInfo.burstNum)
+        spikeTimes1 = [];
+        spikeTimes2 = [];
+        return
+    end
+    
+%% Get spike and burst features
     oldV = v; % Make a copy of v
     
     % Add buffer around the sides so you can get window up to 10 ms
@@ -81,13 +91,12 @@ function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
    end
 
 
-   
    neighborShape = zeros([length(spikeTimes) shapeSize]);
    neighborAmp = [];
    neighborStd = [];
    neighborIsi = [];
    neighborStdIsi = [];
-   
+   numSpikes = [];
 
     % Gather relevant stats for each spike
    for i = 1:length(spikeTimes)
@@ -109,13 +118,13 @@ function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
             distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
             [~, idxMin] = sort(distance);
             idx = idx(idxMin <= 5);
-
+            
+            numSpikes = [numSpikes length(idx)];
             simWave = mean(shape(idx, :));
-            simAmp = mean(amp(idx));
+            simAmp = median(amp(idx));
             simStdAmp = std(amp(idx));
-            simIsi = mean(isiSmaller(idx));
+            simIsi = median(isiSmaller(idx));
             simStdIsi = std(isiSmaller(idx));
-
 
        end
        neighborShape(i, :) = simWave;
@@ -130,7 +139,7 @@ function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
     % into a set for dim reduction
     data  = zeros([length(spikeTimes), shapeSize*2 + 6]);
     
-    data(:, 1) = amp;
+    data(:, 1) = numSpikes;
     data(:, 2) = simAmp;
     data(:, 3) = neighborStd;
     data(:, 4) = isiSmaller;
@@ -139,54 +148,43 @@ function [spikeTimes1, spikeTimes2] = sortSpikes(v, varargin)
     
     data(:, 7:7 + shapeSize - 1) = shape;
     data(:, 7+shapeSize:end) = neighborShape;
+    
+ %% Cluster on dimensionality reduced data
+   rng(1);
+   reduced = tsne(data, 'Standardize', 1);
+%    eva = evalclusters(reduced,'kmeans','DaviesBouldin','KList',1:3);
+%    k = eva.OptimalK;
+% 
+%    labels = kmeans(reduced, k + 1, 'Replicates', 5);
 
 
-   % Cluster on dimensionality reduced data (you don't know what features
-   % are going to be important, so you shouldn't weigh them equally)
-
-   reduced = tsne(data);
-   eva = evalclusters(reduced,'kmeans','DaviesBouldin','KList',1:3);
-   k = eva.OptimalK;
-
-   labels = kmeans(reduced, k);
+    labels = clusterdata(reduced, MaxClust = 4);
 
 
-newLabels = [];
+%Label such that each burst has spikes of most common type
+   for i = 1:length(labels)
+            
+            idx = find(spikeInfo.burstNum == spikeInfo.burstNum(i));
+            %distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
+            %[~, idxMin] = sort(distance);
+            %idx = idx(idxMin <= 5);
 
-% for cycles = 1:3
-% 
-%    for i = 1:length(labels)
-% 
-%        % Aberrant spikes, use five nearest spikes to classify
-%        if spikeInfo.burstNum(i) == -1
-%             idx = 1:length(labels);
-%             distance = abs(spikeInfo.spikeTimes - spikeInfo.spikeTimes(i));
-%             [~, idxMin] = sort(distance);
-%             idx = idx(idxMin <= 5);
-% 
-%             newLabel = mode(labels(idx));
-% 
-%        % Else, find (up to) the 5 nearest spikes in the same burst 
-%        else
-%             
-%             idx = find(spikeInfo.burstNum == spikeInfo.burstNum(i));
-%             distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
-%             [~, idxMin] = sort(distance);
-%             idx = idx(idxMin <= 5);
-% 
-%             newLabel = mode(labels(idx));
-% 
-%        end
-%        newLabels(i) = newLabel;
-%        
-%    end
-% 
-%    labels = newLabels;
-% 
-% end
+            newLabel = mode(labels(idx));
 
-   spikeTimes1 = spikeTimes(labels == 1);
-   spikeTimes2 = spikeTimes(labels == 2);
+ %      end
+       newLabels(i) = newLabel;
+       
+   end
+
+   labels = newLabels;
+
+
+%% Create a structure to hold spike times of different groups
+spikeGroups = struct();
+for i = 1:max(labels)
+    spikeGroups.("spikeTimes" + i) = spikeTimes(labels == i);
+    
+end
 
 % Final figure
 figure
@@ -197,12 +195,32 @@ gscatter(spikeTimes, amp, labels, [], [], 10)
 hold on
 plot(t, v, 'k-')
 
-%
+% Projection, for debugging purposes
 
 figure
 gscatter(reduced(:, 1), reduced(:, 2), labels)
 
 
+%% Label groups 
+prompt = "type neuron and its group number, i.e. LP 2: ";
+x = "";
+
+while x ~= "exit"
+
+    x = input(prompt, "s");
+    x = split(x);
+
+    if x == "exit"
+        break
+    end
     
+    allSpikes = [];
+    for i = 2:length(x)
+        allSpikes = [allSpikes spikeGroups.("spikeTimes" + x{i})];
+        spikeGroups = rmfield(spikeGroups,"spikeTimes" + x{i});
+        allSpikes = sort(allSpikes);
+    end
+    spikeGroups.(x{1}) = allSpikes;
+end   
 
 
