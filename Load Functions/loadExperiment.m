@@ -2,7 +2,7 @@ function extracted_data = loadExperiment(targetNotebook, targetPage, range)
 
 
 % Set filenumbers 
-metadataMaster
+metadata = metadataMaster;
 directory = pathfinder(targetNotebook, targetPage);
 
 if nargin == 2 || isequal(range, "all")
@@ -14,6 +14,10 @@ if nargin == 2 || isequal(range, "all")
 elseif isequal(range, "roi")
     
     files = metadata(targetNotebook, targetPage).files;
+
+elseif isequal(range, "continuousRamp")
+    f = metadata(targetNotebook, targetPage).files;
+    files = f(1):f(end);
 
 elseif isequal(range, "crash")
 
@@ -59,7 +63,8 @@ recorded_channels = fields_for_names.recChNames;
 % Define possible cell types
 cell_types = { 'PD','LP', 'LPG', 'GM', 'VD', 'PY', ...
     'lvn', 'pdn','lpn','llvn','ulvn', 'pyn',   'mvn', 'temp', 'lgn' ...
-    'heart', 'Temp', 'p1', 'cpv4', 'gm5b', 'p2', 'gm6', 'cpv6', 'gm5a', 'cpv1a'};
+    'heart', 'Temp', 'p1', 'cpv4', 'gm5b', 'p2', 'gm6', 'cpv6', 'gm5a', 'cpv1a'...
+    'force'};
 
 % Initialize extracted data structure
 extracted_data = struct();

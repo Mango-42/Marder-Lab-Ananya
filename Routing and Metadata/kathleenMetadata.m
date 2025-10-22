@@ -152,12 +152,12 @@ page = 24;
 
 metadata(NB, page).acclimation = 11;
 metadata(NB, page).channels.lvn = "IN 7";
-metadata(NB, page).channels.heart = "Force";
+metadata(NB, page).channels.force = "Force";
 metadata(NB, page).channels.temp = "Temp";
-metadata(NB, page).tempValues = [11 6 11 14 16 17 21 22];
-metadata(NB, page).files = [90 101 115 119 124 127 134 138];
-metadata(NB, page).conditions = {"saline"};
-metadata(NB, page).conditionStarts = [90];
+metadata(NB, page).tempValues = [6 11 14 16 17 21 23 11 11 6 11 14 16 17 21 22 11 11 6 11 11];
+metadata(NB, page).files = [21 34 38 45 47 60 63 90 101 115 119 124 127 134 138 153 160 164 171 190];
+metadata(NB, page).conditions = {"saline", "saline", "CCAP 10-7"};
+metadata(NB, page).conditionStarts = [1 90 153];
 metadata(NB, page).calibration = 0.27;
 
 %%
@@ -166,13 +166,14 @@ page = 28;
 
 metadata(NB, page).acclimation = 11;
 metadata(NB, page).channels.lvn = "IN 7";
-metadata(NB, page).channels.heart = "Force";
+metadata(NB, page).channels.force = "Force";
 metadata(NB, page).channels.temp = "Temp";
-metadata(NB, page).tempValues = [6 11 14 16 17 21 23];
-metadata(NB, page).files = [6 16 20 26 30 36 38];
-metadata(NB, page).conditions = {"saline"};
-metadata(NB, page).conditionStarts = [6];
+metadata(NB, page).tempValues = [6 11 14 16 17 21 23 11 11 6 11 14 17 21 21 21 17];
+metadata(NB, page).files = [6 16 20 26 30 36 38 82 85 96 104 109 113 117 124 128 130 135];
+metadata(NB, page).conditions = {"saline", "CCAP 10-8", "CCAP 10-7"};
+metadata(NB, page).conditionStarts = [6 85 128];
 metadata(NB, page).calibration = 0.27;
+
 
 %%
 NB = 998;
@@ -181,17 +182,17 @@ page = 46;
 metadata(NB, page).acclimation = 11;
 metadata(NB, page).channels.lvn = "IN 7";
 metadata(NB, page).channels.cpv4 = "Vm_1";
-metadata(NB, page).channels.heart = "Force";
+metadata(NB, page).channels.force = "Force";
 metadata(NB, page).channels.temp = "Temp";
 
 metadata(NB, page).tempValues = [11 14 17 21 21 17 14 11];
-metadata(NB, page).files = [80 84 87 90];
-metadata(NB, page).conditions = {"saline"};
-metadata(NB, page).conditionStarts = [0 0 0 0];
+metadata(NB, page).files = [80 84 87 90 103 110 115 130];
+metadata(NB, page).conditions = {"saline", "CCAP 10-7", "saline"};
+metadata(NB, page).conditionStarts = [80 103 130];
 metadata(NB, page).calibration = 0.2733;
 
 
-%%
+%% idt this is a ft experiment
 NB = 998;
 page = 34;
 
@@ -206,7 +207,6 @@ metadata(NB, page).tempValues = [11 14 16 17 21 23];
 metadata(NB, page).files = [1 5 8 10 13 14];
 metadata(NB, page).conditions = {"saline"};
 metadata(NB, page).conditionStarts = [0 0 0 0];
-metadata(NB, page).calibration = 0.2733;
 
 
 %%
@@ -223,6 +223,37 @@ metadata(NB, page).channels.temp = "Temp";
 metadata(NB, page).tempValues = [11 14 16 17 21 24];
 metadata(NB, page).files = [2 7 10 12 15 24];
 metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
 
+%%
+NB = 998;
+page = 42;
 
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.gm5b = "Vm_1";
+metadata(NB, page).channels.gm6 = "Vm_2";
+metadata(NB, page).channels.gm6 = "Vm_3";
 
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [7 11 14 17 21 11];
+metadata(NB, page).files = [30 35 38 32 45 56];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+
+%%
+NB = 992;
+page = 143;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.p1 = "Vm_1";
+metadata(NB, page).channels.p2 = "Vm_2";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.pyn = "IN 6";
+
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [14 17 21 24];
+metadata(NB, page).files = [5 11 17 20];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
