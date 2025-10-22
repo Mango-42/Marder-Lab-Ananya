@@ -1,93 +1,68 @@
-function [dataPeaks] = forceTransAnalysis(targetNotebook, targetPage)
+function [dataPeaks] = forceTransAnalysis(targetNotebook, targetPage, mode)
     %% Description: Get force and frequency data on a ft experiment. Pair with plotHeartAnalysis.m
     % to plot out figures from output (dataPeaks)
 
     % Inputs:
         % targetNotebook (int)
         % targetPage (int)
+        % mode (str) - either "heart" or "muscle"
+
     % Output:
         % dataPeaks (struct) - struct with the following fields
             % amp - amplitude of every peak detected on files listed in metadata
             % freq - instantaneous frequency of every peaks
             % file - associated file number in the sequence --> fix
-            % temp - avg temp between a peak and the next one (in Celcius)
+            % temp - avg temp between a peak and the next one (in Celsius)
             % time - time of each peak
 
-    % Last updated: Sept 18 2025 by Ananya Dalal
+    % Last updated: Oct 20 2025 by Ananya Dalal
 
 
-metadataMaster
-filename = "/Volumes/marder-lab/adalal/MatFiles/" + targetNotebook + "_" + targetPage + "_heart.mat";
+metadata = metadataMaster;
+filename = "/Volumes/marder-lab/adalal/MatFiles/" + targetNotebook + "_" + targetPage + "_force.mat";
 
-% Try to load experiment data if it's already there in ananya's folder
+%% Try to load experiment data if it's already there in ananya's folder
 if exist(filename, "file")
     dataPeaks = load(filename);
+
+% Otherwise load data and detect peaks along whole experiment
 else
 
-    fs = .0001;
+    fs = 10^4;
 
-    data = loadExperiment(targetNotebook, targetPage, "roi");
-    %%
+    data = loadExperiment(targetNotebook, targetPage, "continuousRamp");
     
-    allData = struct();
-    allData.amp = [];
-    allData.freq = [];
-    allData.temp = [];
-    allData.file = [];
-    allData.time = [];
-
-    files = metadata(targetNotebook, targetPage).files;
-    temps = metadata(targetNotebook, targetPage).tempValues;
     cal = metadata(targetNotebook, targetPage).calibration;
 
-    for f = 1:length(files)
+    allPeaks = struct();
+    
+    % Discontinuous peak detection
+    for f = 1:length(data.force)
         
-%         % skip analysis for any files marked to ignore
-%         if ismember(f, metadata(targetNotebook, targetPage).ignore)
-%             continue
-%         end
-       
         % +1 offset because files start at 0 but indexing starts at 1
-        v = data.heart{f};
+        v = data.force{f};
         temp = data.temp{f};
 
-        vClean = rmoutliers(data.heart{f});
+        vClean = rmoutliers(data.force{f});
         
-%         % Vrest
-%         [rests, loc] = findpeaks(-v, 'MinPeakDistance',2000);
-%         
-%         % Filter noise in data from touching the rig
-%         idxRests = find(rests > rests - 3 * std(rests) & ...
-%             rests < rests + 3 * std(rests));
-% 
-%         rests = rests(idxRests);
-%         loc = loc(idxRests);
-%         restStart = loc(1);
-%         restEnd = loc(end);
-% 
-%         % Interpolate vrest between sampled points
-%         vrestShortRange = interp1(loc, -rests, restStart:restEnd);
-% 
-%         % Align vrests with v
-%         vrest = zeros([1 length(v)]);
-%         vrest(restStart:restEnd) = vrestShortRange; 
-%         vrest(1:restStart) = vrest(restStart);
-%         vrest(restEnd:end) = vrest(restEnd);
 
         % Shift baseline to 0 and scale to calibration value
         force = ((v - min(vClean)) / cal) * (.001 * 9.8);
         figure
         minHeight = mean(force) + std(force);
 
-        % THIS SETTING FOR HEART
-        %findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 / fs, 'MinPeakHeight', minHeight);
-        %THIS SETTING FOR MUSCLE FT
-        findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 / fs);
-        % THIS SETTING FOR HEART
-        %[peaks, loc] = findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 / fs, 'MinPeakHeight', minHeight);
-        %THIS SETTING FOR MUSCLE FT
-        [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 / fs);
-        timeLoc = loc * fs;
+        % Heart vs muscle ft peak detection settings
+        % will default to muscle ft if no mode arg is provided
+        if nargin == 3 && mode == "heart"
+            findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
+            [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
+        else
+       
+            findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
+            [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
+        end
+
+        timeLoc = loc / fs;
 
         % Get rid of noise outlier peaks
         idxPeaks = find(peaks > peaks - 3 * std(peaks) & ...
@@ -95,37 +70,38 @@ else
         peaks = peaks(idxPeaks);
         loc = loc(idxPeaks);
 
-        freqData = zeros([5, length(peaks)]);
-
-        % Frequency and force calculations
-        for i = 1:length(peaks) - 1
-            loc1 = loc(i);
-            loc2 = loc(i +1);
-                freqData(1, i) = peaks(i); % peak value
-                freqData(2, i) = 1 / (timeLoc(i+1) - timeLoc(i)); % freq
-                freqData(3, i) = mean(temp(loc1:loc2)); % avg temp in ISI
-                freqData(4, i) = f;
-                freqData(5, i) = timeLoc(i);
-        end
-
-        allData.amp = [allData.amp, freqData(1, :)];
-        allData.freq = [allData.freq, freqData(2, :)];
-        allData.temp = [allData.temp, freqData(3, :)];
-        allData.file = [allData.file, freqData(4, :)];
-        allData.time = [allData.time, freqData(5, :)];
-
+        allPeaks.amp{f} = peaks;
+        allPeaks.time{f} = timeLoc;
+        
     end
+    
+%% Do analysis on continuous data
+[cdata, peaks] = makeContinuous(data, targetNotebook, targetPage, allPeaks);
 
+freqData = zeros([2, length(peaks.amp)]);
+
+% Frequency and force calculations
+for i = 1:length(peaks.amp) - 1
+    loc1 = peaks.time(i);
+    loc2 = peaks.time(i +1);
+        freqData(1, i) = 1 / (loc2 - loc1); % freq
+        freqData(2, i) = cdata.temp(int64(loc1 * fs)); % temp at peak
+end
+
+
+%% Put everything into a structure to be stored!!
 dataPeaks = matfile(filename,'Writable',true);
-dataPeaks.amp = allData.amp;
-dataPeaks.freq = allData.freq;
-dataPeaks.temp = allData.temp;
-dataPeaks.file = allData.file;
-dataPeaks.time = allData.time;
+dataPeaks.time = peaks.time;
+dataPeaks.force = peaks.amp;
+dataPeaks.condition = peaks.condition;
 
+dataPeaks.freq = freqData(1, :);
+dataPeaks.temp = freqData(2, :);
+% Offset, your files start at the beginning of ramp and end at end of last
+% ramp
+dataPeaks.file = peaks.fileNum + metadata(targetNotebook, targetPage).files(1) - 1;
 
 end
-%%
 
 dataPeaks = load(filename);
 
