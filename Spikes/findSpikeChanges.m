@@ -59,28 +59,38 @@ isChangeInISI = changes;
 idxSpikes = int64(spikeTimes * Fs) + 1;
 amp = v(idxSpikes);
 
-% Set range of how many neighbors to look at on each side
-% If the left and right side amplitudes are more different than the spike
-% to its right or left AND the l - r is a large difference on its own then
-% probsa transition
+% Look at nearby spikes time wise
+% If l - r is a large difference then probably transition
 
-thresh = mean(abs(diff(amp)))  + 1 * (std(abs(diff(amp))));
+thresh = mean(abs(diff(amp)))  + (std(abs(diff(amp))));
 
-for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
-    
-    % if there's a big timeskip in your neighbors, you're not a transition
-    % sorry to disappoint :(
-    if sum(isChangeInISI(i - neighbors:i+neighbors)) > 0
+for i = 2:length(spikeTimes) - 1
+
+    if sum(isChangeInISI(i - 1:i + 1)) > 0
         continue
     end
-    l = mean(amp(i - neighbors: i - 1));
-    r = mean(amp(i + 1: i + neighbors));
-    % abs(l - r) > max([abs(amp(i) - l) abs(amp(i) - r)])
+    closeSpikes = abs(spikeTimes - spikeTimes(i)) < .2;
+    allIdx = 1:length(spikeTimes);
+    idx = allIdx(closeSpikes);
+    l = mean(amp(idx(idx < i)));
+    r = mean(amp(idx(idx > i)));
+
     if abs(l - r) > thresh        
         changes(i) = 2;
     end
 
 end
+
+% for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
+%     
+% 
+%     l = mean(amp(i - neighbors: i - 1));
+%     r = mean(amp(i + 1: i + neighbors));
+%     if abs(l - r) > thresh        
+%         changes(i) = 2;
+%     end
+% 
+% end
 
 
 %% Look for changes in NEG amplitude
@@ -98,22 +108,40 @@ end
 negAmp = min(shape, [], 2);
 
 
-
-% Same algorithm, but now on negative peaks
-for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
-    
-    % if there's a big timeskip in your neighbors, you're not a transition
-    % sorry to disappoint :(
-    if sum(isChangeInISI(i - neighbors:i + neighbors)) > 0
+for i = 2:length(spikeTimes) - 1
+    if sum(isChangeInISI(i - 1:i + 1)) > 0
         continue
     end
-    l = mean(negAmp(i - neighbors: i - 1));
-    r = mean(negAmp(i + 1: i + neighbors));
+    closeSpikes = abs(spikeTimes - spikeTimes(i)) < .2;
+    allIdx = 1:length(spikeTimes);
+    idx = allIdx(closeSpikes);
+    l = mean(negAmp(idx(idx < i)));
+    r = mean(negAmp(idx(idx > i)));
+
     if abs(l - r) > thresh        
         changes(i) = 2;
     end
 
 end
+% 
+% 
+% % Same algorithm, but now on negative peaks
+% for i = neighbors + 1:length(spikeTimes) - 1 - neighbors
+%     
+%     % if there's a big timeskip in your neighbors, you're not a transition
+%     % sorry to disappoint :(
+%     if sum(isChangeInISI(i - neighbors:i + neighbors)) > 0
+%         continue
+%     end
+%     l = mean(negAmp(i - neighbors: i - 1));
+%     r = mean(negAmp(i + 1: i + neighbors));
+%     if abs(l - r) > thresh        
+%         changes(i) = 2;
+%     end
+% 
+% end
+
+
 
 
 changes(changes ~= 0) = 1;

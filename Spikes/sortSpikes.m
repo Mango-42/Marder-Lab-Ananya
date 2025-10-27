@@ -137,7 +137,7 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
    
     % Assemble collected spike info and mean info of spikes in the same burst
     % into a set for dim reduction
-    data  = zeros([length(spikeTimes), shapeSize*2 + 6]);
+    data  = zeros([length(spikeTimes), 7 ]);%shapeSize*2 + 6]);
     
     data(:, 1) = numSpikes;
     data(:, 2) = simAmp;
@@ -145,9 +145,10 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
     data(:, 4) = isiSmaller;
     data(:, 5) = neighborIsi;
     data(:, 6) = neighborStdIsi;
+    data(:, 7) = amp;
     
-    data(:, 7:7 + shapeSize - 1) = shape;
-    data(:, 7+shapeSize:end) = neighborShape;
+%     data(:, 7:7 + shapeSize - 1) = shape;
+%     data(:, 7+shapeSize:end) = neighborShape;
     
  %% Cluster on dimensionality reduced data
    rng(1);
@@ -161,22 +162,22 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
     labels = clusterdata(reduced, MaxClust = 4);
 
 
-%Label such that each burst has spikes of most common type
-   for i = 1:length(labels)
-            
-            idx = find(spikeInfo.burstNum == spikeInfo.burstNum(i));
-            %distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
-            %[~, idxMin] = sort(distance);
-            %idx = idx(idxMin <= 5);
-
-            newLabel = mode(labels(idx));
-
- %      end
-       newLabels(i) = newLabel;
-       
-   end
-
-   labels = newLabels;
+% %Label such that each burst has spikes of most common type
+%    for i = 1:length(labels)
+%             
+%             idx = find(spikeInfo.burstNum == spikeInfo.burstNum(i));
+%             %distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
+%             %[~, idxMin] = sort(distance);
+%             %idx = idx(idxMin <= 5);
+% 
+%             newLabel = mode(labels(idx));
+% 
+%  %      end
+%        newLabels(i) = newLabel;
+%        
+%    end
+% 
+%    labels = newLabels;
 
 
 %% Create a structure to hold spike times of different groups
