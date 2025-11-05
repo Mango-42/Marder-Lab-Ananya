@@ -8,8 +8,9 @@ nbs = [998 998 998];
 pages = [24 28 46];
 
 close all
-metadataMaster % Make sure your experiment is in this file (within Routing and Metadata folder)
+metadata = metadataMaster; % Make sure your experiment is in this file (within Routing and Metadata folder)
 
+condition = "saline";
 figure(101)
 hold on
 % p = fill([21 35 35 21],[0 0 1.4 1.4], [.9 .9 .9]);
@@ -35,6 +36,9 @@ for i = 1:length(nbs)
     
     expName = "NB: " + targetNotebook + " page " + targetPage;
     temps = metadata(targetNotebook, targetPage).tempValues;
+    temps = unique(temps);
+    temps = sort(temps);
+    
     % Plotting! 
 
     freq = [];
@@ -46,15 +50,15 @@ for i = 1:length(nbs)
     
     for t = temps
         % find peaks at that temperature
-        idxTemp = find(dataPeaks.temp > t - .3 & dataPeaks.temp < t + .3);
+        idxTemp = find(dataPeaks.temp > t - 2 & dataPeaks.temp < t + 2 & strcmp(dataPeaks.condition, condition));
     
         if ~isempty(idxTemp)
     
             freq = [freq mean(dataPeaks.freq(idxTemp))];
             freqErr = [freqErr std(dataPeaks.freq(idxTemp)) / sqrt(length(idxTemp))];
             
-            amp = [amp mean(dataPeaks.amp(idxTemp))];
-            ampErr = [ampErr std(dataPeaks.amp(idxTemp))/ sqrt(length(idxTemp))];
+            amp = [amp mean(dataPeaks.force(idxTemp))];
+            ampErr = [ampErr std(dataPeaks.force(idxTemp))/ sqrt(length(idxTemp))];
     
             realTemps = [realTemps, t];
         end

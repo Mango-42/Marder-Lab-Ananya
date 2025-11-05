@@ -258,23 +258,110 @@ metadata(NB, page).files= [26 35 40 45 48 51 53 55 56 72 77 81 85 89 92 95 97 99
 metadata(NB, page).dose_names = { ...
         'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
         'CCAP 300nM', 'CCAP 1μM', 'Washout'};
+
 %%
 NB = 970;
-page = 114;
+page = 117;
 
 metadata(NB, page).condition = 'hot acclimated';
+metadata(NB, page).folder = '970_117';
 
-metadata(NB, page).channels.lvn = 'Ex_8'; %lp big 0.037; py 0.02
+metadata(NB, page).channels.lvn = 'Ex_8'; %lp big 0.2; py 0.1
 metadata(NB, page).channels.pyn = 'Ex_10';%lp same size 
-metadata(NB, page).channels.pdn = 'Ex_6';% clean 0.9
+metadata(NB, page).channels.pdn = 'Ex_6';% clean 0.6
 metadata(NB, page).channels.temp = 'Temp';
 
 metadata(NB, page).modulator='CCAP';
 metadata(NB, page).cond{1}='20°C';
 metadata(NB, page).cond{2}='10°C';
 metadata(NB, page).decentralized = 2;
-metadata(NB, page).files= [16 22 27 32 37 41 44 46 50 66 72 77 82 87 91 96 99 101];%baseline start is first number; followed by starts of all doses and washout- numbers matching file idx not file name
+metadata(NB, page).files= [18 22 27 32 37 41 44 46 48 66 72 77 82 87 91 96 99 101];%baseline start is first number; followed by starts of all doses and washout- numbers matching file idx not file name
 
 metadata(NB, page).dose_names = { ...
         'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
+        'CCAP 300nM', 'CCAP 1μM', 'Washout'};
+
+%%
+NB = 970;
+page = 127;
+
+metadata(NB, page).condition = 'control acclimated';
+metadata(NB, page).folder = '970_127';
+
+metadata(NB, page).channels.lvn = 'Ex_5'; %lp big 0.1
+metadata(NB, page).channels.pyn = 'Ex_4';%lp same size 
+metadata(NB, page).channels.pdn = 'Ex_10';% clean 0.1
+metadata(NB, page).channels.temp = 'Temp';
+
+metadata(NB, page).modulator='CCAP';
+metadata(NB, page).cond{1}='10°C';
+metadata(NB, page).cond{2}='20°C';
+metadata(NB, page).decentralized = 12;
+metadata(NB, page).files= [16 21 25 28 31 33 35 37 55 60 64 68 71 74 76 78];%baseline start is first number; followed by starts of all doses and washout- numbers matching file idx not file name
+
+metadata(NB, page).dose_names = { ...
+        'Baseline','CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
+        'CCAP 300nM', 'CCAP 1μM', 'Washout'};
+%%
+NB = 970;
+page = 128;
+
+metadata(NB, page).condition = 'control acclimated';
+metadata(NB, page).folder = '970_128';
+
+metadata(NB, page).channels.lvn = 'Ex_10'; %lp big 0.1
+metadata(NB, page).channels.temp = 'Temp';
+
+metadata(NB, page).modulator='CCAP';
+metadata(NB, page).cond{1}='10°C';
+metadata(NB, page).cond{2}='20°C';
+metadata(NB, page).decentralized = 24;
+metadata(NB, page).files= [40 45 50 53 56 58 60 62  81 83 87 91 94 97 99 101];%baseline start is first number; followed by starts of all doses and washout- numbers matching file idx not file name
+
+metadata(NB, page).dose_names = { ...
+        'Baseline','CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
+        'CCAP 300nM', 'CCAP 1μM', 'Washout'};
+
+%%
+NB = 970;
+page = 129;
+
+metadata(NB, page).condition = 'control acclimated';
+metadata(NB, page).folder = '970_129';
+
+metadata(NB, page).channels.lvn = 'Ex_5'; %lp big 0.1
+metadata(NB, page).channels.pyn = 'Ex_4';%lp same size 
+metadata(NB, page).channels.pdn = 'Ex_6';% clean 0.1
+metadata(NB, page).channels.temp = 'Temp';
+
+metadata(NB, page).modulator='CCAP';
+metadata(NB, page).cond{1}='10°C';
+metadata(NB, page).cond{2}='20°C';
+metadata(NB, page).decentralized = 39;
+metadata(NB, page).files= [49 53 57 60 63 66 68 70 83 89 93 98 101 104 106 108];%baseline start is first number; followed by starts of all doses and washout- numbers matching file idx not file name
+
+metadata(NB, page).dose_names = { ...
+        'Baseline','CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
+        'CCAP 300nM', 'CCAP 1μM', 'Washout'};
+
+%%
+NB = 970;
+page = 135;
+
+metadata(NB, page).condition = 'hot acclimated';
+metadata(NB, page).folder = '970_135';
+
+metadata(NB, page).channels.lvn = 'Ex_6'; %lp big -0.05
+metadata(NB, page).channels.pyn = 'Ex_4';% clean 0.1
+metadata(NB, page).channels.pdn = 'Ex_5';% clean 0.2
+metadata(NB, page).channels.temp = 'Temp';
+
+metadata(NB, page).modulator='CCAP';
+metadata(NB, page).cond{1}='10°C';
+metadata(NB, page).cond{2}='20°C';
+metadata(NB, page).decentralized = 6;
+metadata(NB, page).files= [20 57 61 65 69 72 74 76 95 100 104 108 112 114 116 118];%baseline start is first number; followed by starts of all doses and washout- numbers matching file idx not file name
+
+metadata(NB, page).dose_names = { ...
+        'Baseline','CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
         'CCAP 300nM', 'CCAP 1μM', 'Washout'};

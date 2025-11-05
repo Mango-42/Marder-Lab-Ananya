@@ -48,17 +48,17 @@ else
 
         % Shift baseline to 0 and scale to calibration value
         force = ((v - min(vClean)) / cal) * (.001 * 9.8);
-        figure
+        %figure
         minHeight = mean(force) + std(force);
 
         % Heart vs muscle ft peak detection settings
         % will default to muscle ft if no mode arg is provided
         if nargin == 3 && mode == "heart"
-            findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
+            %findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
             [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
         else
        
-            findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
+            %findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
             [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
         end
 

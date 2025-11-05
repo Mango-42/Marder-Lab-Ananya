@@ -1,4 +1,39 @@
+NB = 980;
+page = 94;
 
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.p1= "Vm_1";
+metadata(NB, page).channels.lvn = "IN 6";
+metadata(NB, page).channels.temp = 'Temp';
+metadata(NB, page).tempValues = [12 18 21 25 30];
+metadata(NB, page).files = [96 101 105 111 120];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [92];
+
+%%
+NB = 980;
+page = 98;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.p2= "Vm_1";
+metadata(NB, page).channels.lvn = "IN 6";
+metadata(NB, page).channels.temp = 'Temp';
+metadata(NB, page).tempValues = [14 18 22 14 14 17 21 22];
+metadata(NB, page).files = [30 35 40 66 75 77 80 86];
+metadata(NB, page).conditions = {"saline", "OXO 10-7"};
+metadata(NB, page).conditionStarts = [30, 66];
+%%
+NB = 984;
+page = 40;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.p1= "Vm_1";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.temp = 'Temp';
+metadata(NB, page).tempValues = [14 18 22];
+metadata(NB, page).files = [9 13 27];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [9];
 %% CONTROL 1
 NB = 992;
 page = 96;
@@ -191,6 +226,20 @@ metadata(NB, page).conditions = {"saline", "CCAP 10-7", "saline"};
 metadata(NB, page).conditionStarts = [80 103 130];
 metadata(NB, page).calibration = 0.2733;
 
+%%
+NB = 998;
+page = 30;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.gm6 = "Vm_1";
+metadata(NB, page).channels.gm5b = "Vm_2";
+metadata(NB, page).channels.cpv4 = "Vm_3";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.temp = 'Temp';
+metadata(NB, page).tempValues = [6 11 14 17 21 11];
+metadata(NB, page).files = [18 22 24 27 30 33];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [18];
 
 %% idt this is a ft experiment
 NB = 998;
@@ -206,7 +255,7 @@ metadata(NB, page).channels.temp = "Temp";
 metadata(NB, page).tempValues = [11 14 16 17 21 23];
 metadata(NB, page).files = [1 5 8 10 13 14];
 metadata(NB, page).conditions = {"saline"};
-metadata(NB, page).conditionStarts = [0 0 0 0];
+metadata(NB, page).conditionStarts = [0];
 
 
 %%
@@ -257,3 +306,5 @@ metadata(NB, page).tempValues = [14 17 21 24];
 metadata(NB, page).files = [5 11 17 20];
 metadata(NB, page).conditions = {"saline"};
 metadata(NB, page).conditionStarts = [0];
+
+

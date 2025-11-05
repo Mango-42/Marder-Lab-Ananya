@@ -85,22 +85,6 @@ if exist('nb', 'var') && exist('page', 'var')
 
     files = metadata(nb, page).files;
     files = files(1):files(end); % cont ramp files
-    c = metadata(nb, page).conditions;
-
-    starts = metadata(nb, page).conditionStarts; % or doseStarts
-
-    fileCondition = {i};
-
-    conIdx = 1;
-    for i = 1:length(files)
-        if files(i) > starts(conIdx) && length(starts) > conIdx
-            conIdx = conIdx + 1;
-        end
-        
-        fileCondition{i} = c{conIdx};
-
-    end
-    fileCondition = string(fileCondition);
 end
 
 
@@ -127,11 +111,12 @@ if exist('spikes', 'var') && ~isfield(spikes, 'amp')
             nextSpikeTimes = (spikes.(fn2{name}){i} + elapsedTime);
             store = [store nextSpikeTimes];
 
-            fileNum = [fileNum i * ones([1 length(nextSpikeTimes)])];
+            fileNum = [fileNum files(i) * ones([1 length(nextSpikeTimes)])];
         end
     cspikes.(fn2{name}) = store;
     conName = "condition" + (fn2{name});
-    cspikes.(conName) =  fileCondition(fileNum);
+
+    cspikes.(conName) = getCondition(nb, page, fileNum);
 
     end
 
@@ -157,7 +142,7 @@ if exist('spikes', 'var') && isfield(spikes, 'amp')
     
         spikes.time{i} = spikes.time{i} + elapsedTime;
 
-        fileNum = [fileNum i * ones([1 length(spikes.time{i})])];
+        fileNum = [fileNum files(i) * ones([1 length(spikes.time{i})])];
     end
 
     % Wrap everything into a container cspikes
@@ -170,7 +155,7 @@ if exist('spikes', 'var') && isfield(spikes, 'amp')
     cspikes.amp = storeAmp;
     cspikes.fileNum = fileNum;
 
-    cspikes.condition =  fileCondition(fileNum);
+    cspikes.condition = getCondition(nb, page, fileNum);
 
 end
 
