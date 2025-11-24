@@ -1,14 +1,21 @@
-function [vals, err] = dosePlotsHelper(pages)
+function [vals, err, rawData] = dosePlotsHelper(pages, nerve, analysis)
 
 
 ALLCOND = {'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', ...
         'CCAP 100nM', 'CCAP 300nM', 'CCAP 1μM', 'Washout', 'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', ...
         'CCAP 100nM', 'CCAP 300nM', 'CCAP 1μM', 'Washout'};
 
+if strcmp(analysis, "SpikesPerBurst")
+    analysis = "nSp";
+elseif strcmp(analysis, "BurstFreq")
+    analysis = "BuFreq";
+end
+
+
 acclimation = pages;
 
 nb = 970;
-store = NaN(length(acclimation), 18);
+store = nan([length(acclimation) 18]);
 
 for p = 1:length(acclimation)
 
@@ -28,26 +35,27 @@ for p = 1:length(acclimation)
     numConditions = length(files) / 2;
     
     
-    PD = allbursts.PD.burst_data;
-    windows = allbursts.PD.file_lengths;
-    
-    % Set windows to look for burst starts from 
+    neuron = allbursts.(nerve).burst_data;
+    windows = allbursts.(nerve).file_lengths;
+ 
     for i = 1:length(files)
         file = files(i);
         wStart = sum(windows(1:file));
         wEnd = sum(windows(1:file + 1));
     
-        burstStarts = PD.firstSp > wStart & PD.firstSp < wEnd;
-        freq = PD.BuFreq(burstStarts);
-        meanFreq = mean(freq);
-        stErrFreq = std(freq) / sqrt(length(freq));
+        burstStarts = neuron.firstSp > wStart & neuron.firstSp < wEnd;
+        items = neuron.(analysis)(burstStarts)
+        meanItems = mean(items);
+        if isnan(meanItems)
+            meanItems = 0;
+        end
         
         j = i;
         while ~strcmp(c{i}, ALLCOND{j})
             j = j + 1;
         end
 
-        store(p, j) = meanFreq;
+        store(p, j) = meanItems;
         
     end
 
@@ -61,6 +69,8 @@ for p = 1:length(acclimation)
 
 end
 
+
 % Average out data
 vals = mean(store, "omitnan");
 err = std(store, "omitnan");
+rawData = store;
