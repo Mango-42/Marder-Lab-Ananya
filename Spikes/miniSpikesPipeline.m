@@ -1,23 +1,37 @@
-clearvars
-nb = 992;
-page = 80;
-data = loadExperiment(nb, page, "roi");
+%clearvars
+nb = 998;
+page = 129;
+data = loadExperiment(nb, page, "roi"); %accordingly do ROI or all files
 metadata = metadataMaster;
 
-%% Sort spikes
+%% OPT 1: Sort spikes
 spikes = {};
 for i = 1:length(data.lvn)
     spikeGroups = sortSpikes(data.lvn{i});
     spikes{i} = spikeGroups;
 end
 
-%% Or if you already have spike times from crabsort...
+%% OPT 2: if you already have sorted spike times from crabsort...
 files = metadata(nb, page).files;
 spikes = {};
 for i = 1:length(data.lvn)
     spikeTimes = getSpikeTimes("auto", nb, page, files(i));
-    spikes{i}.LP = (spikeTimes.LP{1})';
+    spikes{i}.LP = (spikeTimes.LP{i})';
 end
+
+%% OPT 3 unfinished: You just have ALL spike times + sorted because you alr condensed them
+files = 0:metadata(nb, page).files(end);
+filename = '/Volumes/marder-lab/skedia/KAS_sorted/' + nb + '_' + page + '_KAS_sorted.mat';
+spikeTimes = load(filename);
+
+Fs = 10^4;
+for i = 1:length(data.lvn)
+    lower = i - 1;
+    upper = length(data.lvn{i}) / 10^4;
+
+    spikes{i}.LP = spikeTimes.LP( find(spikeTimes.LP > lower & spikeTimes.LP < upper) );
+end
+
 
 %% Get file number
 

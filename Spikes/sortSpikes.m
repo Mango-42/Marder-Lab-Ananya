@@ -1,26 +1,38 @@
-function [spikeGroups, reduced] = sortSpikes(v, varargin)
+function [spikeGroups, data] = sortSpikes(v, varargin)
 
     %% Description: Sorts spikes from two neurons given raw trace
 
     % Inputs:
         % v (double []): your recorded nerve trace
 
-    % Optional args:
-        % spikeTimes (double[]): have you pre-filtered some spikes (i.e.,
-        % removed PD using PDN, and now you just need to sort PY and LP on
-        % lvn?). Put these spike times here so they get ignored!
+    % Optional args (paired):
+        % spikeTimes (double[]): see below field
+        % !
+        % keep (bool): - 0 (filter above out) vs 1 (use these spikes)
+
+        % sortOn (bool): 0 (don't sort, I only need the features) vs 1 (default)
+        % !
+        % livelabel (bool): - 0 (default) vs 1 (show and let me label my spike
+            % groups in miniSpikesPipeline.m)
+ 
+
+       % Valid signatures include
+        % sortSpikes(v)
+        % sortSpikes(v, spikeTimes, keep), 
+        % sortSpikes(v, sortOn, livelabel), 
+        % sortSpikes(v, spikeTimes, keep, sortOn, livelabel)
 
     % Outputs:
-        % spikeTimes (group 1)
-        % spikeTimes (group 2)
+        % spikeGroups - use miniSpikesPipeline to label sequentially
 
-    % Note these spike groups are unlabeled as there is no expected
+        % data (2D double []): if you want access to the raw features for the spikes
+
+    % Note these spike groups do not have names as there is no expected
     % neuron type. 
-
 
     % Method:
 
-    % This function runs through getExtraSpikes.m to detect spikes first.
+    % This function can run through getExtraSpikes.m to detect spikes first.
 
     % It sorts spikes by clustering them by the following properties:
     
@@ -35,7 +47,7 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
     % Previously, sorting was done in crabsort just using spike waveform
     % shape. 
 
-   
+
 %% Get spike times and changes
     close all
  
@@ -44,12 +56,35 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
     win = 3*10^-3; % Use a window size for shape of 3 ms;
     shapeSize = 2 * (win * Fs) + 1; % +1 for the spike itself 
     
-
-    if nargin == 2
-        [spikeTimes] = getExtraSpikes(v, varargin{1});
-    else
+    sortOn = 1;
+    livelabel = 0;
+    
+    if nargin == 1
         [spikeTimes] = getExtraSpikes(v); 
+    
+    % give spike times to filter by (keep on or off)
+    elseif nargin >= 3 && length(varargin{1}) > 1 && varargin{2} == 0
+        [spikeTimes] = getExtraSpikes(v, varargin{1});
+
+    % give spike times to use
+    elseif nargin >= 3 && length(varargin{1}) > 1 && varargin{2} == 1
+        spikeTimes = varargin{1};
     end
+
+    if nargin > 1 && length(varargin{1}) == 1
+      [spikeTimes] = getExtraSpikes(v); 
+      sortOn = varargin{1};
+      livelabel = varargin{2};
+    end
+
+    if nargin > 3
+      sortOn = varargin{3};
+      livelabel = varargin{4};
+    end
+
+
+
+    
 
     [spikeInfo] = findSpikeChanges(v, spikeTimes);
     if isempty(spikeTimes) || isempty(spikeInfo.burstNum)
@@ -71,10 +106,18 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
    shape = [];
    isiSmaller = [];
 
-   % Get shape of each spike
+   % Get shape of each spike and negative peak
    for i = 1:length(idxSpikes)
         shape(i, :) = v( (idxSpikes(i) - win*Fs ):(idxSpikes(i) + win*Fs) );
    end
+
+    tempV = [ zeros([1 1000]) v zeros([1 1000]) ];
+    for i = 1:length(idxSpikes)
+        shape(i, :) = tempV( (idxSpikes(i) - win*Fs ):(idxSpikes(i) + win*Fs) );
+    end
+    
+    negAmp = min(shape, [], 2);
+
 
    % Get isi; expand to have an "isi" for first and last spike
    isi = diff(spikeTimes);
@@ -137,7 +180,7 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
    
     % Assemble collected spike info and mean info of spikes in the same burst
     % into a set for dim reduction
-    data  = zeros([length(spikeTimes), 7 ]);%shapeSize*2 + 6]);
+    data  = zeros([length(spikeTimes), 8 ]);%shapeSize*2 + 6]);
     
     data(:, 1) = numSpikes;
     data(:, 2) = simAmp;
@@ -146,9 +189,19 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
     data(:, 5) = neighborIsi;
     data(:, 6) = neighborStdIsi;
     data(:, 7) = amp;
+    data(:, 8) = negAmp;
     
 %     data(:, 7:7 + shapeSize - 1) = shape;
 %     data(:, 7+shapeSize:end) = neighborShape;
+
+
+%% If you're not sorting, terminate early
+
+if sortOn == 0
+    spikeGroups = 0;
+    return
+end
+
     
  %% Cluster on dimensionality reduced data
    rng(1);
@@ -159,25 +212,9 @@ function [spikeGroups, reduced] = sortSpikes(v, varargin)
 %    labels = kmeans(reduced, k + 1, 'Replicates', 5);
 
 
-    labels = clusterdata(reduced, MaxClust = 4);
+    labels = clusterdata(reduced, MaxClust = 6);
 
 
-% %Label such that each burst has spikes of most common type
-%    for i = 1:length(labels)
-%             
-%             idx = find(spikeInfo.burstNum == spikeInfo.burstNum(i));
-%             %distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
-%             %[~, idxMin] = sort(distance);
-%             %idx = idx(idxMin <= 5);
-% 
-%             newLabel = mode(labels(idx));
-% 
-%  %      end
-%        newLabels(i) = newLabel;
-%        
-%    end
-% 
-%    labels = newLabels;
 
 
 %% Create a structure to hold spike times of different groups
@@ -198,8 +235,41 @@ plot(t, v, 'k-')
 
 % Projection, for debugging purposes
 
-figure
-gscatter(reduced(:, 1), reduced(:, 2), labels)
+% figure
+% gscatter(reduced(:, 1), reduced(:, 2), labels)
+
+
+%% Give option to label each burst by max spike label (sometimes gets rid of noise)
+
+if livelabel == 0
+    return
+end
+prompt = "Label each burst by max label? Y/N";
+x = input(prompt, "s");
+
+if x == "Y"
+
+    %Label such that each burst has spikes of most common type
+       for i = 1:length(labels)
+                
+                idx = find(spikeInfo.burstNum == spikeInfo.burstNum(i));
+                %distance = abs(spikeInfo.spikeTimes(idx) - spikeInfo.spikeTimes(i));
+                %[~, idxMin] = sort(distance);
+                %idx = idx(idxMin <= 5);
+    
+                newLabel = mode(labels(idx));
+    
+     %      end
+           newLabels(i) = newLabel;
+           
+       end
+    
+       labels = newLabels;
+
+       gscatter(spikeTimes, amp, labels, [], [], 10)
+
+end
+
 
 
 %% Label groups 
@@ -210,6 +280,7 @@ while x ~= "exit"
 
     x = input(prompt, "s");
     x = split(x);
+
 
     if x == "exit"
         break
@@ -223,5 +294,9 @@ while x ~= "exit"
     end
     spikeGroups.(x{1}) = allSpikes;
 end   
+
+
+
+
 
 
