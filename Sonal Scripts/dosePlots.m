@@ -1,8 +1,8 @@
 clearvars
 nb = 970;
 
-pageHot = [107 109 112 114 117]; %111 and 135 not sorted yet
-pageCold = [106 108 113 116]; %110 115
+pageHot = [107 109 112 114 117 135]; % 135 not sorted yet
+pageCold = [110 115 106 108 113 116 ]; % 110 115 106 108 113 116 
 pageControl = [103 105 127 128 129];
 metadata = metadataMaster;
 
@@ -10,7 +10,7 @@ metadata = metadataMaster;
 ALLCOND = {'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', ...
         'CCAP 100nM', 'CCAP 300nM', 'CCAP 1μM', 'Washout', 'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', ...
         'CCAP 100nM', 'CCAP 300nM', 'CCAP 1μM', 'Washout'};
-%%
+%% PHASE SHIFT
 acclimation = pageControl;
 
 store = NaN(length(acclimation), 18);
@@ -150,7 +150,7 @@ end
 % Average out data
 % storeMeans = mean(store, "omitnan");
 
-%% Phase shift
+%% Phase shift plot
 % Get mean points for each of the 6 points needed for making the boxes
 
 pdBars = [];
@@ -205,22 +205,66 @@ set(findall(gcf,'-property','fontsize'),'fontsize',17)
 
 
 
-%% going to try again with boxchart instead
 
-figure
-hold on
-figure
-hold on
-boxchart([pyBars(:, 10:17) lpBars(:, 10:17), pdBars(:, 10:17)], 'Orientation', 'horizontal')
+%% Dose Plots Standard Routine
+nerve = "LP";
+analysis = "totalSpikes";
 
 
-%% Dose Plots PD Burst Frequency
-nerve = "PD";
-analysis = "SpikesPerBurst";
+[storeMeansHot, errHot, rawDataHot, tritableH] = dosePlotsHelper(pageHot, nerve, analysis);
+[storeMeansCold, errCold, rawDataCold, tritableC] = dosePlotsHelper(pageCold, nerve, analysis);
+[storeMeansControl, errControl, rawDataControl, tritableN] = dosePlotsHelper(pageControl, nerve, analysis);
 
-[storeMeansHot, errHot, rawDataHot] = dosePlotsHelper(pageHot, nerve, analysis);
-[storeMeansCold, errCold, rawDataCold] = dosePlotsHelper(pageCold, nerve, analysis);
-[storeMeansControl, errControl, rawDataControl] = dosePlotsHelper(pageControl, nerve, analysis);
+
+% % Any corrections to apply + get ready for plotting
+if analysis == "BurstFreq"
+   analysis = "Burst Frequency";
+
+   % Fix for 110 and 115
+   rawDataCold(1, 1:4) = 0;
+   if nerve == "PD"
+    rawDataCold(2, [1:5, 10:18]) = 0;
+   end
+
+
+   storeMeansCold = mean(rawDataCold, "omitnan");
+   errCold = std(rawDataCold, "omitnan");
+
+elseif analysis == "Triphasic"
+    analysis = "% Triphasic Transitions";
+
+    % Fix for 109, it's fully triphasic at 10 deg but interrupted by gastric
+    rawDataHot(2, 1:9) = 1;
+    storeMeansHot = mean(rawDataHot, "omitnan");
+    errHot = std(rawDataHot, "omitnan");
+
+elseif analysis == "SpikesPerBurst" || analysis == "totalSpikes"
+    if analysis== "SpikesPerBurst"
+        analysis = "Spikes per Burst";
+    else
+        analysis = "Total Spikes";
+    end
+    % Fix for 110 and 115
+   rawDataCold(1, 1:4) = 0;
+   if nerve == "PD"
+    rawDataCold(2, [1:5, 10:18]) = 0;
+   end
+   storeMeansCold = mean(rawDataCold, "omitnan");
+   errCold = std(rawDataCold, "omitnan");
+
+elseif analysis == "nBursts"
+    analysis = "# of Bursts";
+    % Fix for 110 and 115
+   rawDataCold(1, 1:4) = 0;
+   
+   %rawDataCold(2, 1:14) = 0; % Not bursting 
+   storeMeansCold = mean(rawDataCold, "omitnan");
+   errCold = std(rawDataCold, "omitnan");
+
+
+end
+
+
 
 dn = {'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', ...
         'CCAP 100nM', 'CCAP 300nM', 'CCAP 1μM'};
@@ -234,8 +278,8 @@ valsCold = [storeMeansCold(1, 1:9); storeMeansCold(1, 10:end)];
 
 % Make a figure for 10 deg hot and cold animals
 figure
-title(nerve + " Spikes Per Burst at 10°C")
-ylabel(nerve + " Spikes Per Burst")
+title(nerve + " " + analysis + " at 10°C")
+ylabel(nerve + " " + analysis)
 hold on
 %ylim([0 .7])
 
@@ -258,14 +302,14 @@ l.Location = "eastoutside";
 set(findall(gcf,'-property','fontname'),'fontname','arial')
 set(findall(gcf,'-property','box'),'box','off')
 set(findall(gcf,'-property','fontsize'),'fontsize',17)
-
+ylim([0 inf])
 
 % Make a figure for 20 deg hot and cold animals 
 figure
-title(nerve + " Spikes Per Burst at 20°C")
-ylabel(nerve + " Spikes Per Burst")
+title(nerve + " " + analysis + " at 20°C")
+ylabel(nerve + " " + analysis)
 hold on
-%ylim([0 .7])
+ylim([0 inf])
 
 plot(x, valsCold(2,1:end-1), "-o", "LineWidth", 2);
 plot(x, valsHot(2,1:end-1), "-o", "LineWidth", 2);
@@ -286,8 +330,8 @@ l.Location = "eastoutside";
 set(findall(gcf,'-property','fontname'),'fontname','arial')
 set(findall(gcf,'-property','box'),'box','off')
 set(findall(gcf,'-property','fontsize'),'fontsize',17)
-%%
-% save mat files
+
+%% Save mat files
 filename = "/Volumes/marder-lab/adalal/MatFiles/" + "DR_" + nerve + "_" + analysis + ".mat";
 DR = matfile(filename,'Writable',true);
 DR.meansHot = rawDataHot;
@@ -304,7 +348,7 @@ load(filename)
 
 %%
 
-colorMapLength = 8;
+colorMapLength = 9;
 red = [26, 51, 0]/255;
 pink = [230, 255, 230]/255;
 colors_p = [linspace(red(1),pink(1),colorMapLength)', linspace(red(2),pink(2),colorMapLength)', linspace(red(3),pink(3),colorMapLength)'];

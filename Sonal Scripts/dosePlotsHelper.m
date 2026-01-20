@@ -1,4 +1,38 @@
-function [vals, err, rawData] = dosePlotsHelper(pages, nerve, analysis)
+function [vals, err, rawData, varargout] = dosePlotsHelper(pages, varargin)
+
+%% Description: Gathers data for dosePlots.m in existing burst analysis
+% see burst data files for formatting, i.e., at
+% skedia/KAS_sorted/970_109_bursts_allcells.mat
+
+
+% Can also call for triphasic analysis. 
+
+% Inputs:
+    % pages (double []): pages for experiment (nb assumed to be 970)
+
+    % nerve (string): "LP", "PY", or "PD" 
+    % analysis (string): see options below 
+        % SpikesPerBurst
+        % BurstFreq
+        % nBursts - number of bursts
+        % totalSpikes - total spikes for neuron in an abf file 
+        % Triphasic (no nerve arg for this)
+
+% Outputs: 
+    % vals (double []): values averaged by page for all conditions 
+    % err (double []): stdev of values
+    % rawData (double []) mean value for each page across all conditions
+        % size is conditions x num pages
+
+
+if nargin == 3 
+    nerve = varargin{1};
+    analysis = varargin{2};
+end
+if strcmp(analysis, "Triphasic")
+    nerve = "PD"; %  just to avoid throwing errors
+    analysis = "Triphasic";
+end
 
 
 ALLCOND = {'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', ...
@@ -16,6 +50,8 @@ acclimation = pages;
 
 nb = 970;
 store = nan([length(acclimation) 18]);
+tritable = [];
+k = 0;
 
 for p = 1:length(acclimation)
 
@@ -39,12 +75,40 @@ for p = 1:length(acclimation)
     windows = allbursts.(nerve).file_lengths;
  
     for i = 1:length(files)
+        k = k + 1;
         file = files(i);
         wStart = sum(windows(1:file));
         wEnd = sum(windows(1:file + 1));
     
-        burstStarts = neuron.firstSp > wStart & neuron.firstSp < wEnd;
-        items = neuron.(analysis)(burstStarts)
+        if strcmp(analysis, "BuFreq") || strcmp(analysis, "nSp")
+            burstStarts = neuron.firstSp > wStart & neuron.firstSp < wEnd;
+            items = neuron.(analysis)(burstStarts);
+
+        elseif strcmp(analysis, "nBursts")
+            burstStarts = neuron.firstSp > wStart & neuron.firstSp < wEnd;
+            items = sum(burstStarts);
+
+        elseif strcmp(analysis, "totalSpikes")
+            burstStarts = neuron.firstSp > wStart & neuron.firstSp < wEnd;
+            items = sum(neuron.nSp(burstStarts)) / 2;
+        elseif strcmp(analysis, "Triphasic")
+
+            LP = allbursts.LP.burst_data;
+            PY = allbursts.PY.burst_data;
+            PD = allbursts.PD.burst_data;
+
+            lp = LP.firstSp(find(LP.firstSp > wStart & LP.firstSp < wEnd));
+            py = PY.firstSp(find(PY.firstSp > wStart & PY.firstSp < wEnd));
+            pd = PD.firstSp(find(PD.firstSp > wStart & PD.firstSp < wEnd));
+
+            [items, t] = testTriphasic(lp, py, pd);
+
+            t = table2array(t);
+            t = t(:)';
+            tritable(k, 1:9) = t;
+
+        end
+
         meanItems = mean(items);
         if isnan(meanItems)
             meanItems = 0;
@@ -67,6 +131,8 @@ for p = 1:length(acclimation)
 
     end
 
+    
+
 end
 
 
@@ -74,3 +140,4 @@ end
 vals = mean(store, "omitnan");
 err = std(store, "omitnan");
 rawData = store;
+varargout{1} = tritable;
