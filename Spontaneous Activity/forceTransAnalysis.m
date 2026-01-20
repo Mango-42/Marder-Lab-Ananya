@@ -1,4 +1,4 @@
-function [dataPeaks] = forceTransAnalysis(targetNotebook, targetPage, mode)
+function [dataPeaks, n] = forceTransAnalysis(targetNotebook, targetPage, mode)
     %% Description: Get force and frequency data on a ft experiment. Pair with plotHeartAnalysis.m
     % to plot out figures from output (dataPeaks)
 
@@ -9,7 +9,7 @@ function [dataPeaks] = forceTransAnalysis(targetNotebook, targetPage, mode)
 
     % Output:
         % dataPeaks (struct) - struct with the following fields
-            % amp - amplitude of every peak detected on files listed in metadata
+            % force - value in CENTINEWTONS of each peak
             % freq - instantaneous frequency of every peaks
             % file - associated file number in the sequence --> fix
             % temp - avg temp between a peak and the next one (in Celsius)
@@ -30,7 +30,7 @@ else
 
     fs = 10^4;
 
-    data = loadExperiment(targetNotebook, targetPage, "continuousRamp");
+    data = loadExperiment(targetNotebook, targetPage, "continuousRamp"); %continuousRamp
     
     cal = metadata(targetNotebook, targetPage).calibration;
 
@@ -47,19 +47,21 @@ else
         
 
         % Shift baseline to 0 and scale to calibration value
-        force = ((v - min(vClean)) / cal) * (.001 * 9.8);
+        force = ((v - min(vClean)) / cal) * (9.8); % This is in centinewtons. 
         %figure
         minHeight = mean(force) + std(force);
 
         % Heart vs muscle ft peak detection settings
         % will default to muscle ft if no mode arg is provided
         if nargin == 3 && mode == "heart"
-            %findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
+            figure
+            findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
             [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
         else
-       
-            %findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
-            [peaks, loc] = findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
+            figure
+            findpeaks(movmean(force, 1000), 'MinPeakProminence', .0003, 'MinPeakDistance', 0.5 * fs);
+            % DIFF OLD? findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
+            [peaks, loc] = findpeaks(movmean(force, 1000), 'MinPeakProminence', .0003, 'MinPeakDistance', 0.5 * fs);
         end
 
         timeLoc = loc / fs;
@@ -70,8 +72,26 @@ else
         peaks = peaks(idxPeaks);
         loc = loc(idxPeaks);
 
+
+        % Find times when contractions start
+        [~, locs] = findpeaks(movmean(-force, 1000), 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs);
+        figure
+        findpeaks(movmean(-force, 1000), 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs);
+        % interpolate start times in an array so you can easily access which start
+        % time for a peak by indexing
+        allvals = 1:length(force);
+        xq = setdiff(allvals, locs);
+        startLocs = interp1(locs,locs,xq,'previous');
+        allvals(xq) = startLocs;
+        allvals(locs) = locs;
+        startLocs = allvals(loc); % from peak point last start
+        startTimes = startLocs / fs;% convert to time 
+
         allPeaks.amp{f} = peaks;
         allPeaks.time{f} = timeLoc;
+        allPeaks.startTime{f} = startTimes;
+
+        n = allPeaks;
         
     end
     
@@ -89,12 +109,16 @@ for i = 1:length(peaks.amp) - 1
 end
 
 
+
+
+
+
 %% Put everything into a structure to be stored!!
 dataPeaks = matfile(filename,'Writable',true);
 dataPeaks.time = peaks.time;
 dataPeaks.force = peaks.amp;
 dataPeaks.condition = peaks.condition;
-
+dataPeaks.startTime = peaks.startTime;
 dataPeaks.freq = freqData(1, :);
 dataPeaks.temp = freqData(2, :);
 % Offset, your files start at the beginning of ramp and end at end of last
