@@ -49,7 +49,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
 
 
 %% Get spike times and changes
-    close all
+    %close all
  
 
     Fs = 10^4;
@@ -69,6 +69,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
     % give spike times to use
     elseif nargin >= 3 && length(varargin{1}) > 1 && varargin{2} == 1
         spikeTimes = varargin{1};
+        
     end
 
     if nargin > 1 && length(varargin{1}) == 1
@@ -84,7 +85,8 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
 
 
 
-    
+    v = reshape(v,[1,length(v)]);
+    spikeTimes = reshape(spikeTimes,[1,length(spikeTimes)]);
 
     [spikeInfo] = findSpikeChanges(v, spikeTimes);
     if isempty(spikeTimes) || isempty(spikeInfo.burstNum)
@@ -92,6 +94,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
         spikeTimes2 = [];
         return
     end
+    
     
 %% Get spike and burst features
     oldV = v; % Make a copy of v
@@ -167,7 +170,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
             simAmp = median(amp(idx));
             simStdAmp = std(amp(idx));
             simIsi = median(isiSmaller(idx));
-            simStdIsi = std(isiSmaller(idx));
+            simStdIsi = min(isiSmaller(idx)); % std not min
 
        end
        neighborShape(i, :) = simWave;
@@ -180,19 +183,19 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
    
     % Assemble collected spike info and mean info of spikes in the same burst
     % into a set for dim reduction
-    data  = zeros([length(spikeTimes), 8 ]);%shapeSize*2 + 6]);
+    data  = zeros([length(spikeTimes), shapeSize + 6 ]);%]);
     
-    data(:, 1) = numSpikes;
-    data(:, 2) = simAmp;
+    %data(:, 1) = numSpikes;
+    data(:, 2) = neighborAmp;
     data(:, 3) = neighborStd;
-    data(:, 4) = isiSmaller;
+    %data(:, 4) = isiSmaller;
     data(:, 5) = neighborIsi;
     data(:, 6) = neighborStdIsi;
-    data(:, 7) = amp;
-    data(:, 8) = negAmp;
+    %data(:, 7) = amp;
+    %data(:, 8) = negAmp;
     
-%     data(:, 7:7 + shapeSize - 1) = shape;
-%     data(:, 7+shapeSize:end) = neighborShape;
+    data(:, 7:7 + shapeSize - 1) = neighborShape;% shape
+    %data(:, 7+shapeSize:end) = neighborShape;
 
 
 %% If you're not sorting, terminate early
@@ -205,7 +208,7 @@ end
     
  %% Cluster on dimensionality reduced data
    rng(1);
-   reduced = tsne(data, 'Standardize', 1);
+   reduced = tsne(data); %, 'Standardize', 1
 %    eva = evalclusters(reduced,'kmeans','DaviesBouldin','KList',1:3);
 %    k = eva.OptimalK;
 % 
@@ -235,8 +238,8 @@ plot(t, v, 'k-')
 
 % Projection, for debugging purposes
 
-% figure
-% gscatter(reduced(:, 1), reduced(:, 2), labels)
+ figure
+ gscatter(reduced(:, 1), reduced(:, 2), labels)
 
 
 %% Give option to label each burst by max spike label (sometimes gets rid of noise)
