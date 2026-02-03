@@ -143,6 +143,8 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
    neighborIsi = [];
    neighborStdIsi = [];
    numSpikes = [];
+   neighborIsiMin = [];
+   neighborIsiMax = [];
 
     % Gather relevant stats for each spike
    for i = 1:length(spikeTimes)
@@ -170,7 +172,9 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
             simAmp = median(amp(idx));
             simStdAmp = std(amp(idx));
             simIsi = median(isiSmaller(idx));
-            simStdIsi = min(isiSmaller(idx)); % std not min
+            simStdIsi = std(isiSmaller(idx)); % std not min
+            groupIsiMin = min(isiSmaller(idx));
+            groupIsiMax = max(isiSmaller(idx));
 
        end
        neighborShape(i, :) = simWave;
@@ -178,12 +182,14 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
        neighborStd(i) = simStdAmp;
        neighborIsi(i) = simIsi;
        neighborStdIsi(i) = simStdIsi;
+       neighborIsiMin(i) = groupIsiMin;
+       neighborIsiMax(i) = groupIsiMax;
     
    end
    
     % Assemble collected spike info and mean info of spikes in the same burst
     % into a set for dim reduction
-    data  = zeros([length(spikeTimes), shapeSize + 6 ]);%]);
+    data  = zeros([length(spikeTimes), shapeSize + 7 ]);%]);
     
     %data(:, 1) = numSpikes;
     data(:, 2) = neighborAmp;
@@ -191,10 +197,11 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
     %data(:, 4) = isiSmaller;
     data(:, 5) = neighborIsi;
     data(:, 6) = neighborStdIsi;
-    %data(:, 7) = amp;
+    data(:, 4) = neighborIsiMin;
+    %data(:, 7) = neighborIsiMax;
     %data(:, 8) = negAmp;
     
-    data(:, 7:7 + shapeSize - 1) = neighborShape;% shape
+    %data(:, 8:8 + shapeSize - 1) = neighborShape;% shape
     %data(:, 7+shapeSize:end) = neighborShape;
 
 
