@@ -13,7 +13,7 @@ function [dataPeaks, n] = forceTransAnalysis(targetNotebook, targetPage, mode)
             % amp - value in Volts of each contraction
             % base and peak - values in V for computing amp and force
             % freq - instantaneous frequency of every peaks
-            % file - associated file number in the sequence --> fix
+            % file - associated file number in the sequence
             % 
             % temp - avg temp between a peak and the next one (in Celsius)
             % time - time of max contraction force
@@ -23,7 +23,7 @@ function [dataPeaks, n] = forceTransAnalysis(targetNotebook, targetPage, mode)
     % baseline calculation likely was not good at that spot -- just ignore
     % these values.
 
-    % Last updated: Jan 23 2025 by Ananya Dalal
+    % Last updated: Feb 2 2025 by Ananya Dalal
 
 
 metadata = metadataMaster;
@@ -51,13 +51,14 @@ else
         v = data.force{f};
         temp = data.temp{f};
 
-        vClean = rmoutliers(data.force{f});
+        %vClean = rmoutliers(data.force{f});
+        vClean = data.force{f};
         
 
         % Shift baseline to 0 and scale to calibration value
         %force = ((v - min(vClean)) / cal) * (9.8); % This is in centinewtons. 
         %figure
-        minHeight = mean(vClean) + std(vClean);
+        minHeight = .25 * (max(vClean) - min(vClean)) + min(vClean); % + std(vClean);
 
         % Heart vs muscle ft peak detection settings
         % will default to muscle ft if no mode arg is provided
@@ -66,12 +67,16 @@ else
             %findpeaks(vClean, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
             [peaks, loc] = findpeaks(vClean, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
         else
-            %figure
-            %findpeaks(smooth(vClean, 1000)', 'MinPeakProminence', .0003, 'MinPeakDistance', 0.25 * fs, 'MinPeakHeight', minHeight);
+            if mod(f, 5) == 0
+            figure
+            findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.25 * fs, 'MinPeakHeight', minHeight);
+            end
             % DIFF OLD? findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
-            [peaks, loc] = findpeaks(smooth(vClean, 1000)', 'MinPeakProminence', .0003, 'MinPeakDistance', 0.25 * fs, 'MinPeakHeight', minHeight);
+            [peaks, loc] = findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.25 * fs, 'MinPeakHeight', minHeight);
         end
 
+        % to get correct amplitude ****
+        peaks = vClean(loc);
         timeLoc = loc / fs;
 
         % Get rid of noise outlier peaks

@@ -167,29 +167,41 @@ else
             freqData(3, i) = mean(temp(loc1:loc2)); % avg temp in ISI
             freqData(4, i) = vrest(loc1); % vrest
             freqData(5, i) = d.abfNum_d(loc1);
+            freqData(6, i) = t(loc1);
         end
     end
-    
-    dataPeaks.peaks = freqData(1, :);
-    dataPeaks.freq = freqData(2, :);
-    dataPeaks.temp = freqData(3, :);
-    dataPeaks.rest = freqData(4, :);
-    dataPeaks.filenum = freqData(5, :);
+
+    actuallyUsable = any(freqData);
+    actuallyUsable = find(actuallyUsable);
+
+    peaks = freqData(1, :);
+    dataPeaks.peaks = peaks(actuallyUsable);
+    freq = freqData(2, :);
+    dataPeaks.freq = freq(actuallyUsable);
+    temp = freqData(3, :);
+    dataPeaks.temp = temp(actuallyUsable);
+    rest = freqData(4, :);
+    dataPeaks.rest = rest(actuallyUsable);
+    fileNum = freqData(5, :);
+    dataPeaks.filenum = fileNum(actuallyUsable);
+    time = freqData(6, :);
+    dataPeaks.time = time(actuallyUsable);
 
 
-subplot(5, 1, 3)
-plot(t, vrest)
-ylabel("vrest")
 
-subplot(5, 1, 4)
-plot(timeLoc, dataPeaks.freq)
-ylabel("Freq (Hz)")
-subplot(5, 1, 5)
-plot(t, usable)
-ylabel("Usable data")
-xlabel("Time (s)")
-allAxes = findall(gcf,'type','axes');
-linkaxes(allAxes, 'x')
+% subplot(5, 1, 3)
+% plot(t, vrest)
+% ylabel("vrest")
+% 
+% subplot(5, 1, 4)
+% plot(timeLoc, dataPeaks.freq)
+% ylabel("Freq (Hz)")
+% subplot(5, 1, 5)
+% plot(t, usable)
+% ylabel("Usable data")
+% xlabel("Time (s)")
+% allAxes = findall(gcf,'type','axes');
+% linkaxes(allAxes, 'x')
 
 dataPeaks = load(filename);
 

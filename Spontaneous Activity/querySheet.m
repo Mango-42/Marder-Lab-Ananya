@@ -74,11 +74,11 @@ if analysis == "peaks" || analysis == "peaksBin"
     ylabel("Frequency (Hz)")
     title(muscle + " frequency vs temp")
 
-    p = fill([21 35 35 21],[0 0 4 4], [.9 .9 .9]);
-
-    ylim([0 4])
-    xlim([10 35])
-    p.EdgeColor = 'none';
+%     p = fill([21 35 35 21],[0 0 4 4], [.9 .9 .9]);
+% 
+%     ylim([0 4])
+%     xlim([10 35])
+%     p.EdgeColor = 'none';
 
     set(findall(gcf,'-property','fontname'),'fontname','times')
     set(findall(gcf,'-property','box'),'box','off')
@@ -91,11 +91,11 @@ if analysis == "peaks" || analysis == "peaksBin"
     ylabel("Amplitude (mV)")
     title(muscle + " amplitude")
 
-    p = fill([21 35 35 21],[0 0 25 25], [.9 .9 .9]);
-
-    ylim([0 25])
-    xlim([10 35])
-    p.EdgeColor = 'none';
+%     p = fill([21 35 35 21],[0 0 25 25], [.9 .9 .9]);
+% 
+%     ylim([0 25])
+%     xlim([10 35])
+%     p.EdgeColor = 'none';
 
     set(findall(gcf,'-property','fontname'),'fontname','times')
     set(findall(gcf,'-property','box'),'box','off')
@@ -159,6 +159,7 @@ for i = rows
         files = datasheet.files{i};
         [~, idxMaxTemp] = max(datasheet.temperature_values{i});
         [data] = expAnalysis(notebook, page, googleSheet, muscle, 3, -35, files(1):files(idxMaxTemp));
+        
         
         % Make plotting by acclimation temp 
         % diff shapes for 11 deg and diff shades for acclimated 
@@ -247,7 +248,7 @@ if analysis == "peaksBin"
 
     
     % Plot
-    shapes = {'o', '*', 'square', 'diamond', '^', 'x', '.', 'pentagram'};
+    shapes = {'o', '*', 'square', 'diamond', '^', 'x', '.', 'pentagram', '+', '>', '<', 'hexagram'};
     if datasheet.acclimation{i} == "11"
         idx11 = idx11 + 1;
         shape = shapes{idx11};
