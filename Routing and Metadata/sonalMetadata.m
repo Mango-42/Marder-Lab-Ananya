@@ -121,7 +121,7 @@ metadata(NB, page).times_to_plot={'manual', [17 27; 2 12; 42 52; 14 24; 85 95; 2
 metadata(NB, page).dose_names = { ...
         'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
         'CCAP 300nM', 'CCAP 1μM', 'Washout'};
-%%
+%% Burst data good from 30 nM on 10 deg
 NB = 970;
 page = 110;
 
@@ -140,7 +140,10 @@ metadata(NB, page).files= [1 6 11 35 16 20 23 26 28 43 49 54 59 64 69 73 76 78];
 metadata(NB, page).dose_names = { ...
         'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
         'CCAP 300nM', 'CCAP 1μM', 'Washout'};
-%%
+
+
+
+%% Burst data not good on this experiment
 NB = 970;
 page = 111;
 
@@ -238,6 +241,8 @@ metadata(NB, page).files= [32 41 46 51 56 61 65 68 71 80 86 91 96 101 106 111 11
 metadata(NB, page).dose_names = { ...
         'Baseline','CCAP 1nM', 'CCAP 3nM', 'CCAP 10nM', 'CCAP 30nM', 'CCAP 100nM', ...
         'CCAP 300nM', 'CCAP 1μM', 'Washout'};
+
+% Burst data only good on this experiment for 10 deg CCAP 
 %%
 NB = 970;
 page = 116;

@@ -191,7 +191,7 @@ metadata(NB, page).channels.force = "Force";
 metadata(NB, page).channels.temp = "Temp";
 metadata(NB, page).tempValues = [6 11 14 16 17 21 23 11 11 6 11 14 16 17 21 22 11 11 6 11 11];
 metadata(NB, page).files = [21 34 38 45 47 60 63 90 101 115 119 124 127 134 138 153 160 164 171 190];
-metadata(NB, page).conditions = {"saline", "saline", "CCAP 10-7"};
+metadata(NB, page).conditions = {"saline", "saline2", "CCAP 10-7"};
 metadata(NB, page).conditionStarts = [1 90 153];
 metadata(NB, page).calibration = 0.27;
 
@@ -240,6 +240,23 @@ metadata(NB, page).tempValues = [6 11 14 17 21 11];
 metadata(NB, page).files = [18 22 24 27 30 33];
 metadata(NB, page).conditions = {"saline"};
 metadata(NB, page).conditionStarts = [18];
+
+%%
+NB = 998;
+page = 32;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.gm6 = "Vm_1";
+metadata(NB, page).channels.gm6i = "Vm_2";
+metadata(NB, page).channels.gm5b = "Vm_3";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.temp = 'Temp';
+metadata(NB, page).tempValues = [7 11 14 17 21 11];
+metadata(NB, page).files = [10 14 18 21 27 34];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [10];
+
+
 
 %% idt this is a ft experiment
 NB = 998;
@@ -303,8 +320,126 @@ metadata(NB, page).channels.pyn = "IN 6";
 metadata(NB, page).channels.temp = "Temp";
 
 metadata(NB, page).tempValues = [14 17 21 24];
-metadata(NB, page).files = [5 11 17 20];
+
+%% DEC EXPERIMENTS
+NB = 998;
+page = 114;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_3";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.force = "Force";
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [11 14 16 17 21 24 26 11];
+
+metadata(NB, page).files = [4 8 11 12 20 23 26 46];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+metadata(NB, page).calibration = 0.35;
+
+%%
+NB = 998;
+page = 126;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_1";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.force = "Force";
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [6 11 14 16 17 21 11];
+
+metadata(NB, page).files = [14 21 25 27 30 33 46];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+metadata(NB, page).calibration = 0.35;
+
+%%
+NB = 998;
+page = 128;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_1";
+metadata(NB, page).channels.p1 = "Vm_2";
+metadata(NB, page).channels.p2 = "Vm_3";
+metadata(NB, page).channels.lvn = "IN 6";
+
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [11 14 16 17 21 22 11];
+
+metadata(NB, page).files = [6 9 11 12 13 15 21];
 metadata(NB, page).conditions = {"saline"};
 metadata(NB, page).conditionStarts = [0];
 
+%%
+NB = 998;
+page = 129;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_1";
+metadata(NB, page).channels.p1 = "Vm_2";
+metadata(NB, page).channels.p2 = "Vm_3";
+metadata(NB, page).channels.lvn = "IN 6";
+
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [11 14 16 17 21 11];
+
+metadata(NB, page).files = [27 30 32 34 36 43];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+
+%%
+NB = 998;
+page = 130;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_1";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.force = "Force";
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [6 11 14 16 17 21 24 30 11];
+
+metadata(NB, page).files = [20 25 28 30 33 40 45 52 70];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+metadata(NB, page).calibration = 0.35;
+
+%%
+NB = 998;
+page = 138;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_1";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.force = "Force";
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [6 11 14 16 17 21 24];
+
+metadata(NB, page).files = [33 43 50 54 63 68 72];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+metadata(NB, page).calibration = 0.35;
+
+
+%%
+NB = 998;
+page = 142;
+
+metadata(NB, page).acclimation = 11;
+metadata(NB, page).channels.cpv4 = "Vm_1";
+metadata(NB, page).channels.lvn = "IN 5";
+metadata(NB, page).channels.force = "Force";
+metadata(NB, page).channels.temp = "Temp";
+
+metadata(NB, page).tempValues = [8 11 14 16 17 21 24 27 29 11];
+
+metadata(NB, page).files = [66 74 80 84 88 96 98 101 103 113];
+metadata(NB, page).conditions = {"saline"};
+metadata(NB, page).conditionStarts = [0];
+metadata(NB, page).calibration = 0.35;
 
