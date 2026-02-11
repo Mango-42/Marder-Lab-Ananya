@@ -88,6 +88,7 @@ if exist('nb', 'var') && exist('page', 'var')
 end
 
 
+
 %% If given spikes or peaks, align them with corresponding data files.
 
 % Spike mode
@@ -126,6 +127,10 @@ end
 if exist('spikes', 'var') && isfield(spikes, 'amp')
     storeTime = [];
     storeAmp = [];
+    storePeaks = [];
+    storeForce = [];
+    storeBase = [];
+    storeStartTime = [];
     fileNum = [];
 
     % Amp is a field name in peaks structures
@@ -141,6 +146,7 @@ if exist('spikes', 'var') && isfield(spikes, 'amp')
         end
     
         spikes.time{i} = spikes.time{i} + elapsedTime;
+        spikes.startTime{i} = spikes.startTime{i} + elapsedTime;
 
         fileNum = [fileNum files(i) * ones([1 length(spikes.time{i})])];
     end
@@ -148,11 +154,19 @@ if exist('spikes', 'var') && isfield(spikes, 'amp')
     % Wrap everything into a container cspikes
     for i = 1:length(spikes.amp)
         storeTime = [storeTime spikes.time{i}];
+        storeStartTime = [storeStartTime spikes.startTime{i}];
         storeAmp = [storeAmp spikes.amp{i}];
+        storeForce = [storeForce spikes.force{i}];
+        storeBase = [storeBase spikes.base{i}];
+        storePeaks = [storePeaks spikes.peaks{i}];
     end
 
     cspikes.time = storeTime;
+    cspikes.startTime = storeStartTime;
     cspikes.amp = storeAmp;
+    cspikes.force = storeForce;
+    cspikes.peaks = storePeaks;
+    cspikes.base = storeBase;
     cspikes.fileNum = fileNum;
 
     cspikes.condition = getCondition(nb, page, fileNum);
