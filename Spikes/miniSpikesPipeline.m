@@ -1,22 +1,23 @@
 %clearvars
 nb = 998;
-page = 129;
+page = 28;
 data = loadExperiment(nb, page, "roi"); %accordingly do ROI or all files
 metadata = metadataMaster;
 
 %% OPT 1: Sort spikes
 spikes = {};
 for i = 1:length(data.lvn)
-    spikeGroups = sortSpikes(data.lvn{i});
+    spikeGroups = sortSpikes(data.lvn{i}, 1, 1);
     spikes{i} = spikeGroups;
 end
 
-%% OPT 2: if you already have sorted spike times from crabsort...
 files = metadata(nb, page).files;
+%% OPT 2: if you already have sorted spike times from crabsort...
+files = metadata(nb, page).files(1):metadata(nb, page).files(end);
 spikes = {};
 for i = 1:length(data.lvn)
     spikeTimes = getSpikeTimes("auto", nb, page, files(i));
-    spikes{i}.LP = (spikeTimes.LP{i})';
+    spikes{i}.LP = (spikeTimes.LP{1})';
 end
 
 %% OPT 3 unfinished: You just have ALL spike times + sorted because you alr condensed them
@@ -36,7 +37,7 @@ end
 %% Get file number
 
 for i = 1:length(data.lvn)
-    spikes{i}.fileNum = metadata(nb, page).files(i);
+    spikes{i}.fileNum = files(i);
 end
 
 
@@ -67,7 +68,7 @@ end
 
 for i = 1:length(bursts)
     if isfield(bursts{i}, "burstLP")
-        bursts{i}.burstLP.fileNum = metadata(nb, page).files(i) * ones([1 length(bursts{i}.burstLP.burstStarts)]);
+        bursts{i}.burstLP.fileNum = files(i) * ones([1 length(bursts{i}.burstLP.burstStarts)]);
     end
     
 end
