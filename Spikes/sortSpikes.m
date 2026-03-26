@@ -49,7 +49,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
 
 
 %% Get spike times and changes
-    %close all
+    close all
  
 
     Fs = 10^4;
@@ -145,6 +145,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
    numSpikes = [];
    neighborIsiMin = [];
    neighborIsiMax = [];
+   burstTime = [];
 
     % Gather relevant stats for each spike
    for i = 1:length(spikeTimes)
@@ -153,9 +154,12 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
        if spikeInfo.burstNum(i) == -1
            simWave = shape(i);
            simAmp = amp(i);
+           simNegAmp = negAmp(i);
            simStdAmp = 0;
            simIsi = isiSmaller(i);
            simStdIsi = 0;
+           groupIsiMin = 0;
+           groupIsiMax = 0;
 
 
        % Find the 5 nearest spikes in the same burst (to account for
@@ -175,6 +179,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
             simStdIsi = std(isiSmaller(idx)); % std not min
             groupIsiMin = min(isiSmaller(idx));
             groupIsiMax = max(isiSmaller(idx));
+            bTime = max(distance);
 
        end
        neighborShape(i, :) = simWave;
@@ -184,6 +189,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
        neighborStdIsi(i) = simStdIsi;
        neighborIsiMin(i) = groupIsiMin;
        neighborIsiMax(i) = groupIsiMax;
+       burstTime(i) = bTime;
     
    end
    
@@ -199,7 +205,7 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
     data(:, 6) = neighborStdIsi;
     data(:, 4) = neighborIsiMin;
     %data(:, 7) = neighborIsiMax;
-    %data(:, 8) = negAmp;
+    data(:, 8) = negAmp;
     
     %data(:, 8:8 + shapeSize - 1) = neighborShape;% shape
     %data(:, 7+shapeSize:end) = neighborShape;
@@ -254,7 +260,7 @@ plot(t, v, 'k-')
 if livelabel == 0
     return
 end
-prompt = "Label each burst by max label? Y/N";
+prompt = "Label each burst by max label? Y/N ";
 x = input(prompt, "s");
 
 if x == "Y"
