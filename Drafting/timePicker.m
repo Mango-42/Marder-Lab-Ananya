@@ -1,0 +1,77 @@
+% interactive_signal_picker.m
+% Click the plot to record time values. Zoom/pan freely with the toolbar.
+% Close the figure when done — clicked_times will be in your workspace.
+
+% clear; clc; close all;
+% 
+% %% --- Signal Definition (replace with your own t and signal) ---
+% fs     = 1000;
+% t      = 0 : 1/fs : 5;
+% signal = sin(2*pi*3*t) + 0.5*sin(2*pi*7*t) + 0.2*randn(size(t));
+
+%% --- Figure & Axes ---
+fig = figure('Name', 'Signal Picker', 'NumberTitle', 'off', ...
+             'Color', 'white', 'Position', [100 100 1100 500]);
+
+ax = axes('Parent', fig, 'Color', 'white', ...
+          'XColor', 'k', 'YColor', 'k', 'FontSize', 11);
+hold(ax, 'on');  grid(ax, 'on');  box(ax, 'on');
+
+plot(ax, t, signal, 'k', 'LineWidth', 1.2);
+xlabel(ax, 'Time (s)');  ylabel(ax, 'Amplitude');
+title(ax, 'Click to record time values — zoom/pan freely with toolbar');
+xlim(ax, [t(1) t(end)]);
+
+%% --- Shared state via containers.Map ---
+state = containers.Map({'times', 'markers'}, {[], {}});
+
+%% --- Wire up click handler (ax, t, signal, state captured by closure) ---
+set(fig, 'WindowButtonDownFcn', @(src, ~) recordClick(src, ax, t, signal, state));
+
+assignin('base', 'clicked_times', []);
+fprintf('\nLeft-click to record points, right-click to remove nearest. Close when done.\n\n');
+waitfor(fig)
+function recordClick(src, ax, t, signal, state)
+    isRight = strcmp(get(src, 'SelectionType'), 'alt');
+    isLeft  = strcmp(get(src, 'SelectionType'), 'normal');
+    if ~isLeft && ~isRight, return; end
+
+    % Check the click landed inside the axes bounds
+    cp      = get(ax, 'CurrentPoint');
+    x_click = cp(1,1);
+    xl = xlim(ax);  yl = ylim(ax);
+    if x_click < xl(1) || x_click > xl(2) || ...
+       cp(1,2) < yl(1) || cp(1,2) > yl(2)
+        return;
+    end
+
+    times   = state('times');
+    markers = state('markers');
+
+    if isLeft
+        % Snap to nearest sample
+        [~, idx]  = min(abs(t - x_click));
+        snap_time = t(idx);
+        snap_amp  = signal(idx);
+
+        times(end+1)    = snap_time;
+        h = plot(ax, snap_time, snap_amp, 'ro', ...
+                 'MarkerSize', 8, 'MarkerFaceColor', 'r', 'LineWidth', 1);
+        markers{end+1}  = h;
+
+        fprintf('  +  #%d  t = %.4f s\n', numel(times), snap_time);
+
+    elseif isRight && ~isempty(times)
+        % Remove the recorded point closest to the right-click
+        [~, idx] = min(abs(times - x_click));
+        fprintf('  -  removed #%d  t = %.4f s\n', idx, times(idx));
+
+        delete(markers{idx});
+        times(idx)   = [];
+        markers(idx) = [];
+    end
+
+    state('times')   = times;
+    state('markers') = markers;
+    assignin('base', 'clicked_times', times);
+end

@@ -1,19 +1,20 @@
 %clearvars
 nb = 998;
-page = 28;
+page = 114;
 data = loadExperiment(nb, page, "roi"); %accordingly do ROI or all files
 metadata = metadataMaster;
 
+files = metadata(nb, page).files;%(1):metadata(nb, page).files(end);
+
 %% OPT 1: Sort spikes
 spikes = {};
-for i = 1:length(data.lvn)
-    spikeGroups = sortSpikes(data.lvn{i}, 1, 1);
+for i = 1:8
+    spikeGroups = sortSpikes(-data.lvn{i}, 1, 1);
     spikes{i} = spikeGroups;
 end
 
-files = metadata(nb, page).files;
 %% OPT 2: if you already have sorted spike times from crabsort...
-files = metadata(nb, page).files(1):metadata(nb, page).files(end);
+
 spikes = {};
 for i = 1:length(data.lvn)
     spikeTimes = getSpikeTimes("auto", nb, page, files(i));
@@ -36,7 +37,7 @@ end
 
 %% Get file number
 
-for i = 1:length(data.lvn)
+for i = 1:7
     spikes{i}.fileNum = files(i);
 end
 

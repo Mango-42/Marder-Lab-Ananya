@@ -38,7 +38,7 @@ else
 
     fs = 10^4;
 
-    data = loadExperiment(targetNotebook, targetPage, "continuousRamp"); % continuousRamp
+    data = loadExperiment(targetNotebook, targetPage, "continuousRamp"); % continuousRamp [66:78, 80:113]
     
     cal = metadata(targetNotebook, targetPage).calibration;
 
@@ -54,30 +54,30 @@ else
         %vClean = rmoutliers(data.force{f});
         vClean = data.force{f};
         
-
+        tempVClean = rmoutliers(vClean);
         % Shift baseline to 0 and scale to calibration value
         %force = ((v - min(vClean)) / cal) * (9.8); % This is in centinewtons. 
         %figure
-        minHeight = .25 * (max(vClean) - min(vClean)) + min(vClean); % + std(vClean);
+        minHeight = .25 * (max(tempVClean) - min(tempVClean)) + min(tempVClean); % + std(vClean);
 
         % Heart vs muscle ft peak detection settings
         % will default to muscle ft if no mode arg is provided
         if nargin == 3 && mode == "heart"
             %figure
             %findpeaks(vClean, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
-            [peaks, loc] = findpeaks(vClean, 'MinPeakProminence', .0005, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
+            [peaks, loc] = findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
         else
-            if mod(f, 5) == 0
+            if mod(f, 3) == 0
             figure
-            findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.25 * fs, 'MinPeakHeight', minHeight);
+            findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
             end
             % DIFF OLD? findpeaks(force, 'MinPeakProminence', .0003, 'MinPeakDistance', 0.1 * fs);
-            [peaks, loc] = findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.25 * fs, 'MinPeakHeight', minHeight);
+            [peaks, loc] = findpeaks(vClean, 'MinPeakProminence', .01, 'MinPeakDistance', 0.5 * fs, 'MinPeakHeight', minHeight);
         end
 
         % to get correct amplitude ****
         peaks = vClean(loc);
-        timeLoc = loc / fs;
+        
 
         % Get rid of noise outlier peaks
         idxPeaks = find(peaks > peaks - 3 * std(peaks) & ...
@@ -85,9 +85,11 @@ else
         peaks = peaks(idxPeaks);
         loc = loc(idxPeaks);
 
+        timeLoc = loc / fs;
+
 
         % Find times when contractions start
-        [base, locs] = findpeaks(movmean(-vClean, 1000), 'MinPeakProminence', .0005, 'MinPeakDistance', 0.4 * fs);
+        [base, locs] = findpeaks(-smooth(vClean, .001), 'MinPeakProminence', .0005, 'MinPeakDistance', 0.4 * fs);
         base = -base;
         %figure
         %findpeaks(movmean(-vClean, 1000), 'MinPeakProminence', .0005, 'MinPeakDistance', 0.4 * fs);
@@ -108,6 +110,9 @@ else
         allvals(xq) = baseline;
         allvals(locs) = base;
         baseline = allvals(loc); % from peak point last start
+
+        % ok actually this ONLY works for baseline. hhhhhhh so I need to
+        % detect start time a bit better
 
 
         allPeaks.base{f} = baseline;

@@ -1,0 +1,31 @@
+% CRABSORT TIMES
+
+% continuously sorted
+% 992_63
+% 992_96: 37 min 37 sec for already partially done network -- probably an hour of total time
+% 992_143 = 22 min 47 sec
+% 998 114
+% 998_30 = 28 min 58 sec
+
+% 992_46: approx 35 min 
+% 998_34: 15 min 34 sec
+% 998 138: 55 min 50 sec to sort 8 roi files rip
+% 998 35 was done by auto sort continuously
+% 992_129 all done by auto sort
+% 998_24 was done by auto sort
+    % idk why this isn't showing up, bursts.lp is there
+
+
+% 998 126 was done section wise, no missing critical temps
+% 998 142 was done section wise, no missing critical temps
+
+
+
+% issues
+
+% 998 130: about 25 minutes trying to simply get crabsort to work with an
+% abf inconsistency
+% 998 28 is so gastric mill :(( i cant even crabsort it. 
+
+
+

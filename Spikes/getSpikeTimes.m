@@ -48,14 +48,16 @@ spikeTimes = struct();
 filenum = 1;
 
 
-metadataMaster
+metadata = metadataMaster;
 if isequal(range, "roi")
-    files = metadata(targetNotebook, targetPage).tempFiles;
-elseif isequal(range, "crash");
+    files = metadata(targetNotebook, targetPage).files;
+elseif isequal(range, "crash")
     [~, idxMax] = max(metadata(targetNotebook, targetPage).tempValues);
     fileCrash = metadata(targetNotebook, targetPage).tempFiles(idxMax);
     fileBefore = fileCrash - 2;
     files = fileBefore:fileCrash;
+else
+    files = range;
 end
 
 % load in spikes 

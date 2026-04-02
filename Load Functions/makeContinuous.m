@@ -85,6 +85,7 @@ if exist('nb', 'var') && exist('page', 'var')
 
     files = metadata(nb, page).files;
     files = files(1):files(end); % cont ramp files
+    %files = [66:78, 80:113];
 end
 
 

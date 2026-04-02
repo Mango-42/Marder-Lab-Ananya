@@ -1,5 +1,5 @@
 function [spikeInfo] = findSpikeChanges(v, varargin)
-%% Look for changes in spike patterns
+%% Description: Look for changes in spike patterns
 % Nonspecific detection of burst starts, ends, and changes in amplitude and
 % spike density -- functions as a vague burst detector bc it is hard to be
 % specific sometimes
@@ -7,18 +7,38 @@ function [spikeInfo] = findSpikeChanges(v, varargin)
 % Does not account for concurrent bursts (i.e. LG, gastric mill at the same time as
 % triphasic), so you'll have to rely on other factors in sortSpikes for
 % that
+
+% Inputs:
+    % v (double []): voltage trace
+    % spikeTimes (double []) - optional; your spike times if known, else
+    % will call to detect 
+    % useAmpChanges (boolean) - default off, optional; whether you find
+        % changes by ISI or by amp changes in neighbors
+
+% Outputs:
+    % spikeInfo (struct) with fields:
+        % spikeTimes (double [])
+        % burstNum (double []) paired with spike time 
+
+
 %% Get spike times and set params
 Fs = 10^4;
 rng(1)
 neighbors = 3;
+useAmpChanges = 1;
 
 % If you pass in spikes as a secondary argument, assume this IS the set of
 % spikes to use (prefiltered)
-if nargin == 2
+if nargin  > 1 & length(varargin{1}) > 1
     [spikeTimes] = varargin{1};
+elseif nargin == 2
+    [spikeTimes] = getExtraSpikes(v);
+    useAmpChanges = varargin{2};
 else
     [spikeTimes] = getExtraSpikes(v);
 end
+
+
 
 if isempty(spikeTimes) %|| bimodalitycoeff(diff(spikeTimes)) == 0
     spikeInfo = struct();
@@ -26,6 +46,9 @@ if isempty(spikeTimes) %|| bimodalitycoeff(diff(spikeTimes)) == 0
     spikeInfo.burstNum = [];
     return
 end
+
+v = reshape(v,[1,length(v)]);
+spikeTimes = reshape(spikeTimes,[1,length(spikeTimes)]);
 
 
 changes = zeros([1 length(spikeTimes)]);
@@ -39,7 +62,7 @@ end
 
 % Look for a cluster with the biggest isi-- likely starts and ends
 eva = evalclusters(isi','kmeans','DaviesBouldin','KList',1:4);
-k = eva.OptimalK
+k = eva.OptimalK;
 
 [labels, C] = kmeans(isi', k);
 
@@ -54,10 +77,16 @@ k = eva.OptimalK
 changes(labels ~= idxMin) = 1;
 isChangeInISI = changes;
 
+% If you have wayyy too many changes in time then it's probably not easy to
+% tell with time, remove this factor
+if sum(changes) > 500
+    changes = zeros([1 length(spikeTimes)]);
+end
+%% Look for changes in POS amplitude (optional, helpful for back-to-back transitions like on PYN)
 
-%% Look for changes in POS amplitude (helpful for back-to-back transitions)
 idxSpikes = int64(spikeTimes * Fs) + 1;
 amp = v(idxSpikes);
+if useAmpChanges
 
 % Look at nearby spikes time wise
 % If l - r is a large difference then probably transition
@@ -94,6 +123,7 @@ end
 
 
 %% Look for changes in NEG amplitude
+
 
 % Find the negative peak of each spike
 win = 3*10^-3; % Use a window size for shape of 3 ms;
@@ -222,7 +252,10 @@ for i = 1:length(idxChanges)
 end
 
 changes(trueChanges == 1) = 2;
-
+else % only time changes wanted
+    trueChanges = changes;
+end
+%% Figure
 figure()
 gscatter(spikeTimes, amp, changes, [], [], 10)
 hold on

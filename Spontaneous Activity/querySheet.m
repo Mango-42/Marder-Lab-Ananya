@@ -120,8 +120,13 @@ idx4 = 0;
 idx18 = 0;
 
 j = 0;
+
+cmap = maxdistcolor(length(rows) + 5);
+cmapIdx = 0;
+
 % for all matching animals with the muscle and acclimation...
 for i = rows
+    cmapIdx = cmapIdx + 1;
 
     notebook = str2double(datasheet.notebook{i});
     page = str2double(datasheet.page{i});
@@ -222,7 +227,9 @@ if analysis == "peaksBin"
 
     realTemps = []; % only plot temps for which there is usable data 
 
+
     for t = temps
+        
         % find peaks at that temperature
         idxTemp = find(data.temp > t - .3 & data.temp < t + .3);
 
@@ -233,7 +240,7 @@ if analysis == "peaksBin"
             l = legend;
             l.Location = 'eastoutside';
             
-            amp = [amp mean(data.peaks(idxTemp) - data.rest(idxTemp))];
+            amp = [amp mean(data.peaks(idxTemp))]; %  - data.rest(idxTemp)
             ampErr = [ampErr std(data.peaks(idxTemp) - data.rest(idxTemp))/ sqrt(length(idxTemp))];
             l = legend;
             l.Location = 'eastoutside';
@@ -265,21 +272,22 @@ if analysis == "peaksBin"
         faceColor = 'r';
         shape = shapes{idx18};
     end
-        
+    
     figure(101)
-    plot(realTemps, freq, 'DisplayName', expName, 'LineWidth', 2)
+    plot(realTemps, freq, 'DisplayName', expName, 'LineWidth', 2, 'Color', cmap(cmapIdx, :))
     l = legend;
     l.Location = 'eastoutside';
 
     figure(102)
-    plot(realTemps, amp, 'DisplayName', expName, 'LineWidth', 2)
+    plot(realTemps, amp, 'DisplayName', expName, 'LineWidth', 2, 'Color', cmap(cmapIdx, :))
     l = legend;
     l.Location = 'eastoutside';
     
     figure(103)
-    errorbar(realTemps, rest, restErr, "vertical",lineColor, "Marker", shape, ...
-    "MarkerSize",5, "MarkerEdgeColor",faceColor, ...
-    "MarkerFaceColor",faceColor, 'DisplayName', expName)
+    %errorbar(realTemps, rest, restErr, "vertical",lineColor, "Marker", shape, ...
+    %"MarkerSize",5, "MarkerEdgeColor",faceColor, ...
+    %"MarkerFaceColor",faceColor, 'DisplayName', expName)
+    plot(realTemps, rest, 'DisplayName', expName, 'LineWidth', 2, 'Color', cmap(cmapIdx, :))
     l = legend;
     l.Location = 'eastoutside';
 

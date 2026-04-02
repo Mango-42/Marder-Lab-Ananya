@@ -1,7 +1,15 @@
-function [on, activity, spikeInfo] = findBursts(spikeTimes, v)
-%%
+function [on, activity, spikeInfo] = findBursts(spikeTimes, v, varargin)
+%% Finds and characterizes bursts based on spike times
+% Input signatures
+    % spikeTimes, v - when you have spikes already but no burst
+        % characteristics (i.e., crabsorted spikes)
+        % spikeTimes, v - when you have spikes already but no burst
+        % characteristics (i.e., crabsorted spikes)
+
 Fs = 10000;
 
+if isstruct(varargin{1})
+end
 t = (0:length(v) - 1) / Fs;
 locs = spikeTimes;
 

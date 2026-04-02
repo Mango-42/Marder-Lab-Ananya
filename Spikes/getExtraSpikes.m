@@ -70,11 +70,13 @@ function [spikes] = getExtraSpikes(v, varargin)
     pks = pks(idx);
     locs = locs(idx);
 
-    figure
-    hold on
-    plot(time, v);
-    scatter(locs, pks);
-    title(length(pks) + " peaks detected")
+%     figure
+%     hold on
+%     plot(time, v);
+%     scatter(locs, pks);
+%     title(length(pks) + " peaks detected")
+
+    spikes = locs;
     
 
 

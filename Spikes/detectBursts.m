@@ -21,6 +21,7 @@ if(~isstruct(spikeTimes))
     isi = [spikeTimes(1) isi ];
     end
     
+    %isi(isi > 1) = 0.1;
     % Look for a cluster with the biggest isi-- likely starts
     eva = evalclusters(isi','kmeans','DaviesBouldin','KList',1:3);
     k = eva.OptimalK;

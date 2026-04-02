@@ -49,7 +49,6 @@ function [spikeGroups, data] = sortSpikes(v, varargin)
 
 
 %% Get spike times and changes
-    close all
  
 
     Fs = 10^4;

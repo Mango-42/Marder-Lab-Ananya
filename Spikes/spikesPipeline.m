@@ -1,11 +1,11 @@
-clearvars
-notebook = 970;
-page = 103;
 
-data = loadExperiment(notebook, page, 1);
+notebook = 970;
+page = 116;
+
+data = loadExperiment(notebook, page, "roi");
 
 %%
-%clearvars -except data
+clearvars -except data
 close all
 
 fn = fieldnames(data);
@@ -18,15 +18,15 @@ for i = 1
     
     % Check for intracellulars <3
     if isfield(data, 'PD')
-        [spikesPD, onPD, activityPD] = detect(data.PD{i});
+        [spikesPD, activityPD] = detect(data.PD{i});
     end
 
     if isfield(data, 'PY')
-        [spikesPY, onPY, activityPY] = detect(data.PY{i});
+        [spikesPY, activityPY] = detect(data.PY{i});
     end
 
     if isfield(data, 'LP')
-        [spikesLP, onLP, activityLP] = detect(data.LP{i});
+        [spikesLP, activityLP] = detect(data.LP{i});
     end
 
     
@@ -34,31 +34,51 @@ for i = 1
 
     if ~exist('spikesPD','var') && isfield(data, 'pdn')
 
-        [spikesPD, onPD, activityPD] = detect(data.pdn{i});
+        [spikesPD, activityPD] = detect(data.pdn{i});
     end
 
-    if ~exist('spikesLP','var') && isfield(data, 'lpn')
+%     if ~exist('spikesLP','var') && isfield(data, 'lpn')
+% 
+%         [spikesLP, onLP, activityLP] = detect(data.lpn{i}, spikesPD);
+%     end
 
-        [spikesLP, onLP, activityLP] = detect(data.lpn{i}, spikesPD);
-    end
+    % Check for extracellulars with multiple neurons that can be filtered
 
-    % Now, check for extracellulars with multiple neurons and hope you can
-    % use prior data to sort them </3
-
-    % Use LP spikes to sort PY on pyn
+    % Use LP spikes to filter PY on pyn
     if ~exist('spikesPY','var') && exist('spikesLP','var') && isfield(data, 'pyn')
-        [spikesPY, onPY, activityPY] = detect(data.pyn{i}, spikesLP);
+        [spikesPY, activityPY] = detect(data.pyn{i}, spikesLP);
     end
 
-    % Use PY spikes to sort LP on pyn
-    if ~exist('spikesLP','var') && exist('spikesPY','var') && isfield(data, 'pyn')
-        [spikesLP, onLP, activityLP] = detect(data.pyn{i}, spikesPY);
+    % Use PY spikes to sort LP on lvn
+    if ~exist('spikesLP','var') && exist('spikesPY','var') && isfield(data, 'lvn')
+        [spikesLP, activityLP] = detect(data.lvn{i}, spikesPY);
     end
 
 
-    % If there's anything left, try using lvn 
-    if ~exist('spikesLP','var') && exist('spikesPY','var') && exist('spikesPD','var')&& isfield(data, 'lvn')
-        [spikesLP, onLP, activityLP] = detect(data.pyn{i}, spikesPY);
+    % Sort on pyn (no py or lp spikes from previous steps)
+    if ~exist('spikesLP','var') && ~exist('spikesPY','var') && isfield(data, 'pyn')
+        spikeGroups = sortSpikes(data.pyn{i});
+        
+
+    end
+
+
+    % Sort on lvn 
+    if ~exist('spikesLP','var') && ~exist('spikesPY','var') && exist('spikesPD','var') %&& isfield(data, 'lvn')
+        [spikes1, spikes2] = sortSpikes(data.lvn{i} + data.pyn{i}, spikesPD);
+        
+        % shitty method, just assume PY has more spikes lmao 
+        if length(spikes1) < length(spikes2)
+            spikesLP = spikes1;
+            spikesPY = spikes2;
+        else
+            spikesLP = spikes2;
+            spikesPY = spikes1;
+        end
+
+        activityLP = detectBursts(spikesLP);
+        activityPY = detectBursts(spikesPY);
+
     end
     
     testTriphasic
@@ -86,11 +106,7 @@ t.names = names;
 
 scatter(t,"names","spikevar","filled")
 
-%%
 
-
-
-%% FUNCTIONSSS
 %% Robustness measure for the file (ASSUMING BURSTING)
 
 function [robust] = analyze(activityLP, activityPY, activityPD, triphasicAccuracy)
@@ -168,7 +184,7 @@ end
 %% Helper functions
 
 % This will be called a lot to get different channels data
-function [spikes, on, activity] = detect(v, varargin)
+function [spikes, activity] = detect(v, varargin)
     % Assume data that is negative most of the time is probably
     % intracellular data
 
@@ -181,7 +197,7 @@ function [spikes, on, activity] = detect(v, varargin)
         spikes = getExtraSpikes(v, varargin{1});
     end
 
-    [on, activity] = findBursts(spikes, v);
+    [activity] = detectBursts(spikes);
    
 end
 

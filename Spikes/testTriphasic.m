@@ -1,30 +1,12 @@
-% Run spikes pipeline before this, so you have the following variables in
-% your workspace:
-    % activityLP, activityPY, activityPD
-    % onLP, onPY, onPD
+function [triphasicAccuracy, t] = testTriphasic(lp, py, pd)
 
+% Description: a measure of triphasic-ness, counts transitions that
+% are at least partially triphasic (LP -> PY, PY -> PD, PD -> LP)
 
-figure
-
-plot(data.lpn{1})
-hold on
-plot(data.PD{1})
-plot(data.pdn{1})
-
-% scatter(int64(activityLP.burstStarts * 10000), data.lpn{5}(int64(activityLP.burstStarts * 10000)))
-
-
-
-%% Run through starts of bursts and count transitions 
-
-
-% clearvars -except activityLP activityPD activityPY onLP onPY onPD ...
-%     spikesLP spikesPY spikesPD data
-
-lp = activityLP.burstStarts;
-py = activityPY.burstStarts;
-pd = activityPD.burstEnds;
-
+% Inputs:
+    % lp (double[]): lp burst starts for a region
+    % py (double[]): py burst starts for same region
+    % pd (double[]): pd burst starts for same region
 
 LP = [0 0 0]';
 PY = [0 0 0]';
@@ -91,13 +73,16 @@ end
 % Fraction of triphasic LP -> PY -> PD transitions
 triphasic = sum([t{"LP", "PY"}, t{"PY", "PD"}, t{"PD", "LP"}]);
 total = sum(table2array(t), "all");
-triphasicAccuracy = triphasic/total;
 
+if total == 0
+    triphasicAccuracy = 0;
+else
+triphasicAccuracy = triphasic/total;
+end
 disp("Count of transitions from which neuron is on")
 disp(t)
 disp(triphasicAccuracy * 100 + "% of transitions were partially or wholly triphasic");
 
 % clear m LP PY PD lp py pd total triphasic nextLP nextPY nextPD next neurons ...
 %     first nextStarts idx lowerLimit upperLimit
-
 

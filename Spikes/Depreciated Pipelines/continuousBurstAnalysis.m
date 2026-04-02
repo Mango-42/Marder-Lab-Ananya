@@ -1,25 +1,31 @@
-nb = 998;
-page = 35;
+nb = 992;
+page = 63;
 data = loadExperiment(nb, page, "continuousRamp");
 %% Detect and sort spikes by labeling detected clusters
 close all
+clearvars -except nb page data
 spikes = {};
 
+numFiles = 3;
+
 % Run this in parallel to split up work on your cpu
-for i = 1:4 % your number of CONTINUOUS files.. technically not correct rn
-    [spikeGroups] = sortSpikes(data.lvn{i});
+for i = 1:numFiles % your number of CONTINUOUS files
+    [spikeGroups] = sortSpikes(data.pyn{i});
     spikes{i} = spikeGroups;
 end
 
 
 % Label the neurons
-for i = 1:4
+for i = 1:numFiles
     
+
     prompt = "type neuron and its group number, i.e. LP 2: ";
     figure(i)
     x = input(prompt, "s");
     x = split(x);
     spikeGroups = spikes{i};
+
+
 
     % Replace the name of the field with the neuron name
     spikeGroups.(x{1}) = spikeGroups.("spikeTimes" + x{2});
@@ -38,14 +44,14 @@ for i = 1:length(spikes)
     end
 end
 
-% Make your spikes continuous across files
-[cdata, cspikes] = makeContinuous(data, spikeTimes);
-
-% Detect bursts
-[~, burstInfo] = detectBursts(cspikes.LP);
-
-%% Wrap temperature data and and condition (saline, mod) metadata in
-Fs = 10^4;
-burstInfo.temp = cdata.temp(int64(burstInfo.burstStarts * Fs));
-
+% %% Make your spikes continuous across files
+% [cdata, cspikes] = makeContinuous(data, nb, page, spikeTimes);
+% 
+% % Detect bursts
+% [~, burstInfo] = detectBursts(cspikes.LP);
+% 
+% % Wrap temperature data and and condition (saline, mod) metadata in
+% Fs = 10^4;
+% burstInfo.temp = cdata.temp(int64(burstInfo.burstStarts * Fs));
+% 
 
