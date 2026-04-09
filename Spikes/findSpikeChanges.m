@@ -51,7 +51,7 @@ isi = [spikeTimes(1) isi ];
 end
 
 % Look for a cluster with the biggest isi-- likely starts and ends
-eva = evalclusters(isi','kmeans','DaviesBouldin','KList',1:4);
+eva = evalclusters(isi','kmeans','DaviesBouldin','KList',1:3);
 k = eva.OptimalK;
 
 [labels, C] = kmeans(isi', k);
@@ -64,13 +64,14 @@ changes(labels ~= idxMin) = 1;
 
 
 % If you have too few or too many changes in time, also use amp changes
-if sum(changes) == 0 || length(spikeTimes) / sum(changes) > 15
-    warning("Too many time changes detected, only using amp changes")
+if sum(changes) > 500
+    warning("Too many time changes initially detected")
     changes = zeros([1 length(spikeTimes)]); % too many = bad detection
+    changes(labels == idxMax) = 1;
     useAmpChanges = 1;
 end
 
-if length(spikeTimes) / sum(changes) > 15
+if sum(changes) == 0 || length(spikeTimes) / sum(changes) > 15
     useAmpChanges = 1;
 end
 
@@ -86,18 +87,22 @@ if useAmpChanges
     thresh = mean(abs(diff(amp)))  + (std(abs(diff(amp))));
     
     for i = 2:length(spikeTimes) - 1
-    
+        localIdx = abs(spikeTimes - spikeTimes(i)) < 5.0; % 5s local window
+        localAmp = amp(localIdx);
+        thresh = mean(abs(diff(localAmp))) + std(abs(diff(localAmp)));
         if sum(isChangeInISI(i - 1:i + 1)) > 0
             continue
         end
-        closeSpikes = abs(spikeTimes - spikeTimes(i)) < .2;
+        localISI = median(isi(max(1,i-5):min(end,i+5)));
+        dynamicWin = localISI * 8; % ~8 spikes worth of context
+        closeSpikes = abs(spikeTimes - spikeTimes(i)) < dynamicWin;
         allIdx = 1:length(spikeTimes);
         idx = allIdx(closeSpikes);
         if isempty(idx(idx < i)) || isempty(idx(idx > i))
             continue
         end
         l = mean(amp(idx(idx < i)));
-        r = mean(amp(idx(idx > i)));
+        r = mean(amp(idx(idx >= i)));
     
         if abs(l - r) > thresh        
             changes(i) = 1;
@@ -123,10 +128,15 @@ if useAmpChanges
     
     
     for i = 2:length(spikeTimes) - 1
+        localIdx = abs(spikeTimes - spikeTimes(i)) < 5.0; % 5s local window
+        localAmp = amp(localIdx);
+        thresh = mean(abs(diff(localAmp))) + std(abs(diff(localAmp)));
         if sum(isChangeInISI(i - 1:i + 1)) > 0
             continue
         end
-        closeSpikes = abs(spikeTimes - spikeTimes(i)) < .2;
+        localISI = median(isi(max(1,i-5):min(end,i+5)));
+        dynamicWin = localISI * 8; % ~8 spikes worth of context
+        closeSpikes = abs(spikeTimes - spikeTimes(i)) < dynamicWin;
         allIdx = 1:length(spikeTimes);
         idx = allIdx(closeSpikes);
 
@@ -134,7 +144,7 @@ if useAmpChanges
             continue
         end
         l = mean(negAmp(idx(idx < i)));
-        r = mean(negAmp(idx(idx > i)));
+        r = mean(negAmp(idx(idx >= i)));
     
         if abs(l - r) > thresh        
             changes(i) = 1;
@@ -188,31 +198,33 @@ if useAmpChanges
         
             ampDiffPos = [];
             ampDiffNeg = [];
-        
+    
+            bestScore = -Inf;
+            bestSplit = spikesToSplit(1);
             for j = 1:length(spikesToSplit)
-
-                if spikesToSplit(j) > 1
-                    lPos = abs(amp(spikesToSplit(j)) - amp(spikesToSplit(j) - 1));
-                    lNeg = abs(negAmp(spikesToSplit(j)) - negAmp(spikesToSplit(j) - 1));
-                else
-                    lPos = 0;
-                    lNeg = 0;
+                splitPt = spikesToSplit(j);
+                leftAmp = amp(max([1 splitPt - 4]):max([1 splitPt - 1]));
+                rightAmp = amp(splitPt: min([length(amp) splitPt + 3]));
+                if isempty(leftAmp) || isempty(rightAmp), continue; end
+                    score = abs(mean(leftAmp) - mean(rightAmp));
+                if score > bestScore
+                    bestScore = score;
+                    bestSplit = splitPt;
                 end
-                ampDiffPos = [ampDiffPos lPos];
-                ampDiffNeg = [ampDiffNeg lNeg];
             end
-        
-                % Figure out if biggest amp diff is a positive or negative peak
-                if max(ampDiffPos) > max(ampDiffNeg)
-                    ampDiff = ampDiffPos;
-                else
-                    ampDiff = ampDiffNeg;
-                end
-                
-                [~, idxMaxAmpChange] = max(ampDiff);
-                ampDiff = 0 * ampDiff;
-                ampDiff(idxMaxAmpChange) = 1;
-                trueChanges(spikesToSplit(1):spikesToSplit(end)) = ampDiff;
+            trueChanges(bestSplit) = 1;
+    
+%             % Figure out if biggest amp diff is a positive or negative peak
+%             if max(ampDiffPos) > max(ampDiffNeg)
+%                 ampDiff = ampDiffPos;
+%             else
+%                 ampDiff = ampDiffNeg;
+%             end
+%             
+%             [~, idxMaxAmpChange] = max(ampDiff);
+%             ampDiff = 0 * ampDiff;
+%             ampDiff(idxMaxAmpChange) = 1;
+%             trueChanges(spikesToSplit(1):spikesToSplit(end)) = ampDiff;
         end
 
 
@@ -223,11 +235,11 @@ else % only time changes wanted
     trueChanges = changes;
 end
 %% Figure
-figure
-gscatter(spikeTimes, amp, changes, [], [], 10)
-hold on
-t = (0:length(v) - 1) / Fs;
-plot(t, v, 'k-')
+% figure
+% gscatter(spikeTimes, amp, changes, [], [], 10)
+% hold on
+% t = (0:length(v) - 1) / Fs;
+% plot(t, v, 'k-')
 
 %% Wrap output up so you have easy access to burst number
 spikeInfo = struct();

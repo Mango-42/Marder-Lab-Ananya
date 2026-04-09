@@ -95,6 +95,8 @@ function [spikeGroups, data] = sortSpikesByBurst(v, varargin)
         shape(i, :) = v( (idxSpikes(i) - win*Fs ):(idxSpikes(i) + win*Fs) );
     end
     
+    % Reduce shape into 2 dim TSNE
+    smallShape = tsne(shape);
     % Features 1 & 2: Amplitude and Negative Amplitude
     amp = v(idxSpikes);
     negAmp = min(shape, [], 2);
@@ -212,6 +214,9 @@ function [spikeGroups, data] = sortSpikesByBurst(v, varargin)
     data(:, 12) = neighborIsiMin;
     data(:, 13) = neighborIsiMax;
     % Reduced waveform
+    data(:, 14) = smallShape(:, 1);
+    data(:, 15) = smallShape(:, 2);
+
 
 
 %% If you're not sorting, terminate early
