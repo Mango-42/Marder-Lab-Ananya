@@ -344,8 +344,13 @@ function SpikeSorterApp()
 
         oldName = extractGroupName(labelList.Value);
         if isfield(sg, oldName)
+            if isfield(sg, label)
+                sg.(label) = [sg.(label) sg.(oldName)];
+            else
             sg.(label) = sg.(oldName);
+            end
             sg = rmfield(sg, oldName);
+
             state.results.(ch){fi} = sg;
             refreshLabelList(sg);
             refreshFileList();
