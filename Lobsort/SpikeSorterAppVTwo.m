@@ -1,4 +1,4 @@
-function SpikeSorterApp()
+function SpikeSorterAppVTwo()
 % SpikeSorterApp  Prototype spike sorter UI with manual correction.
 %
 % Workflow:
